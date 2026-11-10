@@ -103,18 +103,14 @@ form.addEventListener("submit", (event) => {
   filter(input.value);
 });
 
-function load(): void {
-  fetch("/assets/search.json")
-    .then((response) => response.json() as Promise<readonly SearchEntry[]>)
-    .then((data) => {
-      entries = data;
-      filter(input.value);
-    })
-    .catch((error: unknown) => {
-      // without the index there is nothing to search, and the field stays honest about it
-      console.error(error);
-      count.textContent = "搜索索引未能加载";
-    });
-}
-
-load();
+void fetch("/assets/search.json")
+  .then((response) => response.json() as Promise<readonly SearchEntry[]>)
+  .then((data) => {
+    entries = data;
+    filter(input.value);
+  })
+  .catch((error: unknown) => {
+    // without the index there is nothing to search, and the count says so
+    console.error(error);
+    count.textContent = "搜索索引未能加载";
+  });

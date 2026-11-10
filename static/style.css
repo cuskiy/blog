@@ -63,11 +63,11 @@
   --leading-tight: 1.25;
   --leading-display: 1.1;
 
-  --text-sm: clamp(0.72rem, 0.68rem + 0.15vw, 0.76rem);
-  --text-md: clamp(0.8rem, 0.75rem + 0.22vw, 0.92rem);
-  --text-lg: clamp(0.95rem, 0.85rem + 0.45vw, 1.19rem);
-  --text-xl: clamp(1.19rem, 1.05rem + 0.8vw, 1.62rem);
-  --text-2xl: clamp(1.72rem, 1.2rem + 2.2vw, 2.8rem);
+  --text-sm: clamp(0.74rem, 0.7rem + 0.15vw, 0.78rem);
+  --text-md: clamp(0.84rem, 0.79rem + 0.22vw, 0.95rem);
+  --text-lg: clamp(0.98rem, 0.88rem + 0.45vw, 1.22rem);
+  --text-xl: clamp(1.22rem, 1.08rem + 0.8vw, 1.65rem);
+  --text-2xl: clamp(1.76rem, 1.24rem + 2.2vw, 2.84rem);
 
   --space-1: 0.2rem;
   --space-2: 0.4rem;
@@ -844,6 +844,11 @@ main {
       4px 0,
       13px 0;
   }
+}
+
+/* the playing row is marked by a note in front of its title */
+.music-room[data-playing] .music-list button[aria-current]::before {
+  content: "♪";
 }
 
 .music-room[data-playing] .music-list button[aria-current] .music-wave {

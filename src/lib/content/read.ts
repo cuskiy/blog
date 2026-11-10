@@ -1,7 +1,8 @@
-import { access, readFile, readdir } from "node:fs/promises";
+import { readFile, readdir } from "node:fs/promises";
 import { join } from "node:path";
 
 import { renderDjot } from "../djot.ts";
+import { exists } from "../fs.ts";
 import { readMemoDate, readPageMeta, readPostMeta, splitFrontmatter } from "../frontmatter.ts";
 import type { Memo, Page, Post, Track } from "./model.ts";
 import { TRACKS } from "./music.ts";
@@ -47,16 +48,9 @@ export async function loadPosts(dir: string): Promise<Post[]> {
   return posts.toSorted((a, b) => (a.date === b.date ? a.slug.localeCompare(b.slug) : a.date < b.date ? 1 : -1));
 }
 
-async function present(dir: string): Promise<boolean> {
-  return access(dir).then(
-    () => true,
-    () => false,
-  );
-}
-
 export async function loadPages(dir: string): Promise<Page[]> {
   // the directory may be empty or absent: a site with no extra pages is a normal site
-  if (!(await present(dir))) {
+  if (!(await exists(dir))) {
     return [];
   }
 

@@ -40,7 +40,7 @@ describe("formatDate", () => {
     assert.equal(formatDate("2025-12-31"), "二〇二五年十二月三十一日");
   });
 
-  it("writes the date in English", () => {
+  it("keeps single-digit months and days short", () => {
     assert.equal(formatDate("2025-06-12"), "二〇二五年六月十二日");
     assert.equal(formatDate("2025-01-02"), "二〇二五年一月二日");
   });

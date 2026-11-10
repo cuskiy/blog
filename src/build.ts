@@ -1,5 +1,5 @@
 import { createHash } from "node:crypto";
-import { access, cp, mkdir, rename, rm, writeFile } from "node:fs/promises";
+import { cp, mkdir, rename, rm, writeFile } from "node:fs/promises";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -9,6 +9,7 @@ import { minify as minifyHtml } from "html-minifier-terser";
 
 import type { Assets } from "./lib/assets.ts";
 import { perPage, site } from "./lib/config.ts";
+import { exists } from "./lib/fs.ts";
 import { collectTags, loadMemos, loadPages, loadPosts, loadTracks, searchIndex } from "./lib/content/index.ts";
 import { friends } from "./lib/links.ts";
 import { manifest } from "./lib/manifest.ts";
@@ -28,13 +29,6 @@ import { tagIndexPage, tagPage } from "./pages/tags.ts";
 export const root = fileURLToPath(new URL("..", import.meta.url));
 export const dist = join(root, "dist");
 const staging = join(root, "dist.tmp");
-
-async function exists(path: string): Promise<boolean> {
-  return access(path).then(
-    () => true,
-    () => false,
-  );
-}
 
 async function emit(path: string, content: string): Promise<void> {
   const target = join(staging, path);
@@ -91,13 +85,6 @@ async function bundle(): Promise<Assets> {
     await cp(join(root, "static", file), join(staging, "assets", file));
   }
   await cp(join(root, "static", "robots.txt"), join(staging, "robots.txt"));
-
-  // a friend card whose avatar is missing would ship a broken image
-  for (const friend of friends) {
-    if (!(await exists(join(root, "static", "avatar", friend.avatar)))) {
-      throw new Error(`${friend.avatar}: listed in links.ts but missing from static/avatar`);
-    }
-  }
   await cp(
     join(root, "node_modules", "spessasynth_lib", "dist", "spessasynth_processor.min.js"),
     join(staging, "assets", "js", "spessasynth_processor.min.js"),
@@ -110,6 +97,13 @@ export async function build(): Promise<number> {
   // the feed and the links page build absolute links, so the origin has to be a bare one
   if (new URL(site.url).pathname !== "/") {
     throw new Error(`site.url must be a bare origin, got ${JSON.stringify(site.url)}`);
+  }
+
+  // a friend card whose avatar is missing would ship a broken image
+  for (const friend of friends) {
+    if (!(await exists(join(root, "static", "avatar", friend.avatar)))) {
+      throw new Error(`${friend.avatar}: listed in links.ts but missing from static/avatar`);
+    }
   }
 
   await rm(staging, { recursive: true, force: true });
