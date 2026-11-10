@@ -1,0 +1,8 @@
+dist
+dist.tmp
+node_modules
+static/midi
+static/soundfont
+static/music
+static/avatar
+package-lock.json

@@ -1,0 +1,19 @@
+# dependencies
+node_modules/
+
+# local configuration
+.env
+
+# build output
+dist/
+dist.tmp/
+dist.old/
+
+# nix
+result
+result-*
+.direnv/
+
+# editor and OS noise
+.DS_Store
+*.swp

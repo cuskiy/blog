@@ -1,0 +1,40 @@
+{
+  "name": "clog",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "A static blog generator for djot.",
+  "engines": {
+    "node": ">=24"
+  },
+  "scripts": {
+    "code": "npm run fmt && npm run lint && npm run lint:css && npm run typecheck",
+    "build": "npm run code && node --env-file-if-exists=.env src/cli.ts build",
+    "serve": "npm run code && node --env-file-if-exists=.env src/cli.ts serve",
+    "fmt": "prettier --write .",
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit",
+    "test": "node --test \"test/**/*.test.ts\"",
+    "check": "npm run code && npm test && node --env-file-if-exists=.env src/cli.ts build && npm run verify:output",
+    "verify:output": "node scripts/verify-output.ts",
+    "lint:css": "stylelint \"static/*.css\""
+  },
+  "dependencies": {
+    "@djot/djot": "^0.3.2",
+    "spessasynth_lib": "^4.4.7"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "@types/html-minifier-terser": "^7.0.2",
+    "@types/node": "^26.6.6",
+    "esbuild": "^0.28.2",
+    "eslint": "^10.14.0",
+    "eslint-config-prettier": "^10.1.8",
+    "html-minifier-terser": "^7.2.0",
+    "prettier": "^3.9.10",
+    "stylelint": "^18.0.0",
+    "stylelint-config-standard": "^41.0.0",
+    "typescript": "^6.0.2",
+    "typescript-eslint": "^8.72.2"
+  }
+}

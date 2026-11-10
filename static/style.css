@@ -1,0 +1,905 @@
+/* tokens */
+
+:root {
+  color-scheme: light dark;
+
+  --page: light-dark(#ffffff, #141414);
+  --ink: light-dark(#000000, #ffffff);
+
+  /* dark surfaces take a wider step: the same jump reads weaker on a dark ground */
+  --surface: light-dark(
+    color-mix(in oklab, var(--ink) 2.5%, var(--page)),
+    color-mix(in oklab, var(--ink) 7%, var(--page))
+  );
+  --surface-hover: light-dark(
+    color-mix(in oklab, var(--ink) 5%, var(--page)),
+    color-mix(in oklab, var(--ink) 12%, var(--page))
+  );
+  --surface-active: color-mix(in oklab, var(--ink) 6%, var(--surface));
+
+  --page-text: light-dark(
+    color-mix(in oklab, var(--ink) 80%, var(--page)),
+    color-mix(in oklab, var(--ink) 84%, var(--page))
+  );
+  --page-text-muted: light-dark(
+    color-mix(in oklab, var(--ink) 66%, var(--page)),
+    color-mix(in oklab, var(--ink) 70%, var(--page))
+  );
+  --page-border: color-mix(in oklab, var(--ink) 14%, var(--page));
+  --focus: color-mix(in oklab, var(--ink) 30%, var(--page));
+
+  --surface-text: light-dark(
+    color-mix(in oklab, var(--ink) 80%, var(--surface)),
+    color-mix(in oklab, var(--ink) 84%, var(--surface))
+  );
+  --surface-text-muted: light-dark(
+    color-mix(in oklab, var(--ink) 66%, var(--surface)),
+    color-mix(in oklab, var(--ink) 70%, var(--surface))
+  );
+  --surface-hover-text: light-dark(
+    color-mix(in oklab, var(--ink) 80%, var(--surface-hover)),
+    color-mix(in oklab, var(--ink) 84%, var(--surface-hover))
+  );
+  --surface-hover-text-muted: light-dark(
+    color-mix(in oklab, var(--ink) 66%, var(--surface-hover)),
+    color-mix(in oklab, var(--ink) 70%, var(--surface-hover))
+  );
+
+  --code: color-mix(in oklab, var(--ink) 1%, var(--surface));
+  --code-text: var(--surface-text);
+  --mark: light-dark(
+    color-mix(in oklab, var(--ink) 14%, var(--page)),
+    color-mix(in oklab, var(--ink) 26%, var(--page))
+  );
+
+  --font:
+    system-ui, "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC",
+    "Source Han Sans SC", sans-serif;
+  --font-mono:
+    ui-monospace, "SFMono-Regular", "Cascadia Mono", Menlo, Consolas, "Liberation Mono", "Noto Sans Mono CJK SC",
+    monospace;
+
+  --leading: 1.65;
+  --leading-tight: 1.25;
+  --leading-display: 1.1;
+
+  --text-sm: clamp(0.72rem, 0.68rem + 0.15vw, 0.76rem);
+  --text-md: clamp(0.8rem, 0.75rem + 0.22vw, 0.92rem);
+  --text-lg: clamp(0.95rem, 0.85rem + 0.45vw, 1.19rem);
+  --text-xl: clamp(1.19rem, 1.05rem + 0.8vw, 1.62rem);
+  --text-2xl: clamp(1.72rem, 1.2rem + 2.2vw, 2.8rem);
+
+  --space-1: 0.2rem;
+  --space-2: 0.4rem;
+  --space-3: 0.6rem;
+  --space-4: 0.8rem;
+  --space-5: 1rem;
+  --space-6: 1.6rem;
+  --space-7: 2.4rem;
+
+  --rule: 1px solid var(--page-border);
+  --radius: 0.6rem;
+  --icon: 1rem;
+  --avatar: 2rem;
+  --underline: 0.15em;
+  --panel-max: 32rem;
+  --meta-max: 42ch;
+  --art-max: 24rem;
+  --wave-width: 4rem;
+  --wave-height: 1rem;
+
+  --card-min: 23rem;
+  --friend-min: 15.2rem;
+  --track-min: clamp(9.75rem, 16vw, 12rem);
+  --input-min: 11.2rem;
+  --max-width: 60rem;
+  --page-pad: clamp(1rem, 4.5vw, 1.6rem);
+
+  /* a wave drift travels exactly one dot gap, so the pattern lands back on itself */
+  --dot-gap-near: 14px;
+  --dot-gap-far: 21px;
+  --dot-near: color-mix(in oklab, var(--ink) 22%, transparent);
+  --dot-near-soft: color-mix(in oklab, var(--ink) 14%, transparent);
+  --dot-far: color-mix(in oklab, var(--ink) 11%, transparent);
+
+  --ease: 0.2s ease;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --ease: 0s;
+  }
+}
+
+/* base */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-block-size: 100dvh;
+  background-color: var(--page);
+  color: var(--page-text);
+  font: var(--text-md) / var(--leading) var(--font);
+  overflow-wrap: anywhere;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+  transition: color var(--ease);
+}
+
+mark {
+  padding-inline: 0.15em;
+  background: var(--mark);
+  color: inherit;
+}
+
+:focus-visible,
+:is(input, textarea, select):focus {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+
+.container {
+  max-inline-size: var(--max-width);
+  margin-inline: auto;
+  padding-inline: var(--page-pad);
+}
+
+.visually-hidden {
+  position: absolute;
+  inline-size: 1px;
+  block-size: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+/* header */
+
+.site-header {
+  background: var(--surface);
+  color: var(--surface-text);
+
+  & .container {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-2) var(--space-5);
+    padding-block: var(--space-3);
+  }
+}
+
+.brand {
+  font-size: var(--text-lg);
+  font-weight: 700;
+  letter-spacing: -0.01em;
+
+  &:hover {
+    color: var(--surface-text-muted);
+  }
+}
+
+.site-nav {
+  & ul {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-3);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  & a {
+    display: block;
+    padding-block: var(--space-1);
+    color: var(--surface-text-muted);
+    font-size: var(--text-sm);
+
+    &:hover {
+      color: var(--surface-text);
+    }
+
+    &[aria-current="page"] {
+      color: var(--surface-text);
+      font-weight: 600;
+    }
+  }
+}
+
+/* page */
+
+main {
+  padding-block: var(--space-7);
+}
+
+.page-head {
+  display: grid;
+  gap: var(--space-2);
+  margin-block-end: var(--space-6);
+
+  & h1 {
+    margin: 0;
+    font-size: var(--text-2xl);
+    line-height: var(--leading-display);
+    letter-spacing: -0.02em;
+    text-wrap: balance;
+  }
+
+  & p {
+    max-inline-size: var(--meta-max);
+    margin: 0;
+    color: var(--page-text-muted);
+    text-wrap: pretty;
+  }
+}
+
+.page-nav {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: var(--space-3);
+  margin-block-start: var(--space-7);
+  font-size: var(--text-sm);
+
+  & a {
+    color: var(--page-text-muted);
+
+    &:hover {
+      color: var(--page-text);
+    }
+  }
+
+  & .page-now {
+    color: var(--page-text-muted);
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+.empty {
+  margin: 0;
+  color: var(--page-text-muted);
+}
+
+.post-count {
+  margin-block: 0 var(--space-5);
+  color: var(--page-text-muted);
+  font-size: var(--text-sm);
+}
+
+.list-title {
+  margin-block: 0 var(--space-4);
+  color: var(--page-text-muted);
+  font-size: var(--text-sm);
+  font-weight: 600;
+}
+
+.noscript-note {
+  padding: var(--space-4);
+  border: var(--rule);
+  border-radius: var(--radius);
+  color: var(--page-text-muted);
+}
+
+/* page sections */
+
+.section-title {
+  margin-block: 0 var(--space-4);
+  font-size: var(--text-xl);
+  line-height: var(--leading-tight);
+  text-wrap: balance;
+}
+
+.contact-list {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: var(--space-2) var(--space-5);
+  margin: 0;
+
+  & dt {
+    color: var(--page-text-muted);
+    font-size: var(--text-sm);
+  }
+
+  & dd {
+    margin: 0;
+
+    /* an encoded value arrives after the first paint, so its line is reserved up front */
+    min-block-size: calc(1em * var(--leading));
+    overflow-wrap: anywhere;
+  }
+
+  & code {
+    font-family: var(--font-mono);
+    font-size: var(--text-sm);
+    user-select: all;
+  }
+}
+
+/* surfaces: a card or chip only ever moves between a surface tone and its hover pair */
+
+.post,
+.memo,
+.friend,
+.tag-list a,
+.music-list button {
+  background: var(--surface);
+  color: var(--surface-text);
+  border-radius: var(--radius);
+  transition:
+    background-color var(--ease),
+    color var(--ease);
+
+  &:hover,
+  &:focus-within {
+    background: var(--surface-hover);
+    color: var(--surface-hover-text);
+  }
+}
+
+.post-list,
+.memo-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(var(--card-min), 100%), 1fr));
+  gap: var(--space-5);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.post,
+.memo {
+  display: grid;
+  align-content: start;
+  gap: var(--space-1);
+  padding: var(--space-4);
+  scroll-margin-block-start: var(--space-6);
+
+  & h2 {
+    margin: 0;
+    font-size: var(--text-lg);
+    line-height: var(--leading-tight);
+    text-wrap: balance;
+  }
+}
+
+.post > a {
+  display: block;
+}
+
+.post-meta,
+.post-excerpt,
+.memo-date {
+  margin: 0;
+  color: var(--surface-text-muted);
+  font-size: var(--text-sm);
+
+  .post:hover &,
+  .post:focus-within &,
+  .memo:hover & {
+    color: var(--surface-hover-text-muted);
+  }
+}
+
+.post-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1) var(--space-3);
+}
+
+.post-excerpt {
+  font-size: var(--text-md);
+  text-wrap: pretty;
+}
+
+/* a memo card is a grid item, so its body margins stay inside instead of collapsing:
+   trimming the outer pair keeps the card padding even on all four sides */
+.memo .prose > :first-child {
+  margin-block-start: 0;
+}
+
+.memo .prose > :last-child {
+  margin-block-end: 0;
+}
+
+.tag-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+
+  & a {
+    display: inline-flex;
+    align-items: baseline;
+    gap: var(--space-2);
+
+    /* chips and compact rows are the same role, so they take the same padding */
+    padding: var(--space-2) var(--space-3);
+    font-size: var(--text-sm);
+
+    &:hover .count {
+      color: var(--surface-hover-text-muted);
+    }
+  }
+
+  & .count {
+    color: var(--surface-text-muted);
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+/* friends */
+
+.friend-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(var(--friend-min), 100%), 1fr));
+  gap: var(--space-5);
+  margin-block: 0 var(--space-7);
+  padding: 0;
+  list-style: none;
+}
+
+.friend {
+  display: grid;
+  grid-template-columns: var(--avatar) minmax(0, 1fr);
+  grid-template-rows: auto auto;
+  grid-template-areas:
+    "avatar name"
+    "avatar note";
+  align-content: center;
+  align-items: center;
+  gap: var(--space-1) var(--space-3);
+  block-size: 100%;
+  padding: var(--space-4);
+
+  &:hover,
+  &:focus-within {
+    & a {
+      color: var(--surface-hover-text);
+    }
+
+    & span {
+      color: var(--surface-hover-text-muted);
+    }
+  }
+
+  & img {
+    grid-area: avatar;
+    align-self: center;
+    inline-size: var(--avatar);
+    block-size: var(--avatar);
+    border-radius: 50%;
+    background: var(--page);
+    object-fit: cover;
+  }
+
+  & a {
+    grid-area: name;
+    min-inline-size: 0;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+
+  & strong {
+    display: block;
+    font-size: var(--text-md);
+    font-weight: 600;
+    line-height: var(--leading-tight);
+  }
+
+  & span {
+    grid-area: note;
+    min-inline-size: 0;
+    overflow: hidden;
+    color: var(--surface-text-muted);
+    font-size: var(--text-sm);
+    line-height: var(--leading-tight);
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    transition: color var(--ease);
+  }
+}
+
+/* definition panels: the credits list and the site card share one shape */
+
+.music-credits,
+.site-card {
+  padding: var(--space-4);
+  background: var(--surface);
+  color: var(--surface-text-muted);
+  border-radius: var(--radius);
+  font-size: var(--text-sm);
+
+  & dl {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: var(--space-1) var(--space-5);
+    margin: 0;
+  }
+
+  & dt {
+    color: var(--surface-text);
+    font-weight: 600;
+  }
+
+  & dd {
+    margin: 0;
+  }
+}
+
+.site-card {
+  max-inline-size: var(--panel-max);
+
+  & dd {
+    font-family: var(--font-mono);
+    user-select: all;
+    overflow-wrap: anywhere;
+  }
+}
+
+.music-credits a {
+  text-decoration: underline;
+  text-decoration-color: var(--surface-text-muted);
+  text-underline-offset: var(--underline);
+
+  &:hover {
+    color: var(--surface-text);
+    text-decoration-color: currentColor;
+  }
+}
+
+.prose a,
+.contact-list a {
+  text-decoration: underline;
+  text-decoration-color: var(--page-text-muted);
+  text-underline-offset: var(--underline);
+
+  &:hover {
+    text-decoration-color: currentColor;
+  }
+}
+
+/* prose: a block carries its own trailing gap and a heading its own leading one, so
+   nested content (a paragraph inside dd or li) is spaced like the rest without a rule */
+
+.prose {
+  & :is(p, ul, ol, dl, blockquote, pre, table) {
+    /* inline as well: a blockquote would otherwise keep the browser's 40px indent */
+    margin: 0 0 var(--space-5);
+  }
+
+  & :is(h1, h2, h3, h4, h5, h6) {
+    margin-block: var(--space-6) var(--space-3);
+    line-height: var(--leading-tight);
+    text-wrap: balance;
+  }
+
+  & h1 {
+    font-size: var(--text-2xl);
+  }
+
+  & h2 {
+    font-size: var(--text-xl);
+  }
+
+  & h3 {
+    font-size: var(--text-lg);
+  }
+
+  & :is(h4, h5, h6) {
+    font-size: var(--text-md);
+  }
+
+  & p {
+    text-wrap: pretty;
+  }
+
+  & :is(ul, ol) {
+    padding-inline-start: 1.5em;
+  }
+
+  & li + li {
+    margin-block-start: var(--space-1);
+  }
+
+  & dt {
+    font-weight: 600;
+  }
+
+  & dd {
+    margin-inline-start: var(--space-5);
+  }
+
+  & blockquote {
+    padding-inline-start: var(--space-5);
+    border-inline-start: 2px solid var(--page-border);
+    color: var(--page-text-muted);
+  }
+
+  & :is(code, kbd) {
+    font-family: var(--font-mono);
+    font-size: 0.9em;
+  }
+
+  & :not(pre) > code {
+    padding: 0.1em 0.35em;
+    background: var(--code);
+    color: var(--code-text);
+    border-radius: calc(var(--radius) / 3);
+  }
+
+  & pre {
+    padding: var(--space-4);
+    background: var(--code);
+    color: var(--code-text);
+    border-radius: var(--radius);
+    overflow-x: auto;
+  }
+
+  & table {
+    inline-size: 100%;
+    border-collapse: collapse;
+  }
+
+  & :is(th, td) {
+    padding: var(--space-2) var(--space-3);
+    border-block-end: var(--rule);
+    text-align: start;
+  }
+
+  & th {
+    color: var(--page-text);
+    font-weight: 600;
+    white-space: nowrap;
+  }
+
+  & .align-center {
+    text-align: center;
+  }
+
+  & .align-right {
+    text-align: right;
+  }
+
+  & img {
+    max-inline-size: 100%;
+    block-size: auto;
+  }
+
+  /* a rule and the footnotes open a break, so they take the section gap, not the block one */
+  & hr {
+    margin-block: var(--space-6);
+    border: 0;
+    border-block-start: var(--rule);
+  }
+
+  & [role="doc-endnotes"] {
+    margin-block-start: var(--space-7);
+    font-size: var(--text-sm);
+  }
+}
+
+/* search */
+
+.search-form {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin-block-end: var(--space-6);
+}
+
+.search-input {
+  flex: 1 1 var(--input-min);
+  padding: var(--space-3);
+  border: 0;
+  border-radius: var(--radius);
+  background: var(--surface);
+  color: var(--surface-text);
+  font: inherit;
+  font-size: var(--text-sm);
+
+  &::placeholder {
+    color: var(--surface-text-muted);
+  }
+}
+
+.search-submit {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-3);
+  border: 0;
+  border-radius: var(--radius);
+  background: var(--surface);
+  color: var(--surface-text);
+  cursor: pointer;
+
+  &:hover {
+    background: var(--surface-hover);
+    color: var(--surface-hover-text);
+  }
+}
+
+.search-icon {
+  inline-size: var(--icon);
+  block-size: var(--icon);
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-width: 2;
+}
+
+/* music */
+
+.music-room {
+  display: grid;
+  gap: var(--space-6);
+
+  &:not([data-ready]) button {
+    cursor: progress;
+  }
+}
+
+.music-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(var(--track-min), 100%), 1fr));
+  gap: var(--space-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+
+  & button {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    inline-size: 100%;
+    padding: var(--space-2) var(--space-3);
+    border: 0;
+    color: var(--surface-text-muted);
+    font: inherit;
+    font-size: var(--text-sm);
+    text-align: start;
+    cursor: pointer;
+
+    &:hover {
+      color: var(--surface-hover-text);
+    }
+
+    &[aria-current] {
+      background: var(--surface-active);
+      color: var(--surface-text);
+      font-weight: 600;
+    }
+  }
+
+  & .music-title {
+    min-inline-size: 0;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+}
+
+.music-wave {
+  position: relative;
+  inline-size: var(--wave-width);
+  block-size: var(--wave-height);
+  margin-inline-start: auto;
+  overflow: hidden;
+  opacity: 0;
+  transition: opacity var(--ease);
+
+  /* the ends fade out, so a dot enters and leaves gradually (black is opaque in a mask) */
+  mask-image: linear-gradient(90deg, transparent, black 24%, black 76%, transparent);
+
+  & .wave-drift {
+    position: absolute;
+    inset-block: 0;
+    inset-inline-start: 0;
+    inline-size: calc(100% + var(--gap));
+    background-repeat: repeat;
+    animation: wave-drift var(--period) linear infinite;
+    animation-play-state: paused;
+  }
+
+  /* two depths: the near layer has bigger, firmer dots and moves faster */
+  & .wave-drift-near {
+    --gap: var(--dot-gap-near);
+    --period: 4.2s;
+
+    background-image:
+      radial-gradient(circle 1.1px at 50% 32%, var(--dot-near) 99%, transparent 100%),
+      radial-gradient(circle 0.9px at 50% 70%, var(--dot-near-soft) 99%, transparent 100%);
+    background-size:
+      var(--dot-gap-near) 100%,
+      var(--dot-gap-near) 100%;
+    background-position:
+      0 0,
+      6px 0;
+  }
+
+  & .wave-drift-far {
+    --gap: var(--dot-gap-far);
+    --period: 7s;
+
+    background-image:
+      radial-gradient(circle 0.9px at 50% 20%, var(--dot-far) 99%, transparent 100%),
+      radial-gradient(circle 0.7px at 50% 56%, var(--dot-far) 99%, transparent 100%);
+    background-size:
+      var(--dot-gap-far) 100%,
+      var(--dot-gap-far) 100%;
+    background-position:
+      4px 0,
+      13px 0;
+  }
+}
+
+.music-room[data-playing] .music-list button[aria-current] .music-wave {
+  opacity: 1;
+
+  & .wave-drift {
+    animation-play-state: running;
+  }
+}
+
+@keyframes wave-drift {
+  to {
+    transform: translateX(calc(var(--gap) * -1));
+  }
+}
+
+/* the same selector as above, so the stop lands on the same layer as the animation */
+@media (prefers-reduced-motion: reduce) {
+  .music-wave .wave-drift {
+    animation: none;
+  }
+}
+
+.music-art {
+  margin: 0;
+  padding-inline: clamp(var(--space-4), 8vw, var(--space-7));
+
+  & img {
+    inline-size: 100%;
+    max-inline-size: var(--art-max);
+    block-size: auto;
+    margin-inline: auto;
+    display: block;
+  }
+}
+
+/* the line art is black with its own alpha, so an inversion turns it light without
+   touching the thin strokes the artwork draws with */
+@media (prefers-color-scheme: dark) {
+  img {
+    filter: brightness(0.88);
+  }
+
+  .music-art img {
+    filter: invert(1);
+  }
+}
+
+/* footer */
+
+.site-footer {
+  padding-block: var(--space-6);
+  color: var(--page-text-muted);
+  font-size: var(--text-sm);
+
+  & p {
+    margin: 0;
+  }
+}
