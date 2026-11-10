@@ -211,11 +211,10 @@ describe("accessibility", () => {
 });
 
 describe("feed", () => {
-  process.env.SITE_URL = "https://blog.test";
   const xml = feed([post("a", "A & B"), post("b", "B")]);
 
   it("links every entry absolutely", () => {
-    assert.match(xml, /<link href="https:\/\/blog\.test\/posts\/a\/" rel="alternate"\/>/);
+    assert.match(xml, /<link href="https:\/\/blog\.ity\.moe\/posts\/a\/" rel="alternate"\/>/);
   });
 
   it("escapes the title as XML", () => {

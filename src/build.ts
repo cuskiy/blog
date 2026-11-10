@@ -8,7 +8,7 @@ import type { BuildOptions } from "esbuild";
 import { minify as minifyHtml } from "html-minifier-terser";
 
 import type { Assets } from "./lib/assets.ts";
-import { perPage } from "./lib/config.ts";
+import { perPage, site } from "./lib/config.ts";
 import { collectTags, loadMemos, loadPages, loadPosts, loadTracks, searchIndex } from "./lib/content/index.ts";
 import { friends } from "./lib/links.ts";
 import { manifest } from "./lib/manifest.ts";
@@ -107,6 +107,11 @@ async function bundle(): Promise<Assets> {
 }
 
 export async function build(): Promise<number> {
+  // the feed and the links page build absolute links, so the origin has to be a bare one
+  if (new URL(site.url).pathname !== "/") {
+    throw new Error(`site.url must be a bare origin, got ${JSON.stringify(site.url)}`);
+  }
+
   await rm(staging, { recursive: true, force: true });
 
   const assets = await bundle();

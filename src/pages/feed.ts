@@ -1,16 +1,13 @@
 import { site } from "../lib/config.ts";
 import type { Post } from "../lib/content/index.ts";
 import { html } from "../lib/html.ts";
-import { siteOrigin } from "../lib/origin.ts";
 
 // Atom wants an updated stamp even when the feed carries no entries at all
 const epoch = "1970-01-01";
 
 export function feed(posts: readonly Post[]): string {
-  const origin = siteOrigin();
-
   function absolute(path: string): string {
-    return `${origin}${path}`;
+    return `${site.url}${path}`;
   }
 
   function stamp(iso: string): string {

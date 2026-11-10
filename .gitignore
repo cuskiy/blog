@@ -1,9 +1,6 @@
 # dependencies
 node_modules/
 
-# local configuration
-.env
-
 # build output
 dist/
 dist.tmp/

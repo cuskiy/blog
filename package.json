@@ -9,13 +9,13 @@
   },
   "scripts": {
     "code": "npm run fmt && npm run lint && npm run lint:css && npm run typecheck",
-    "build": "npm run code && node --env-file-if-exists=.env src/cli.ts build",
-    "serve": "npm run code && node --env-file-if-exists=.env src/cli.ts serve",
+    "build": "npm run code && node src/cli.ts build",
+    "serve": "npm run code && node src/cli.ts serve",
     "fmt": "prettier --write .",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
     "test": "node --test \"test/**/*.test.ts\"",
-    "check": "npm run code && npm test && node --env-file-if-exists=.env src/cli.ts build && npm run verify:output",
+    "check": "npm run code && npm test && node src/cli.ts build && npm run verify:output",
     "verify:output": "node scripts/verify-output.ts",
     "lint:css": "stylelint \"static/*.css\""
   },

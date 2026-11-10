@@ -129,10 +129,7 @@ Tag names are percent-encoded in links but kept as-is for directory names, so `C
 
 `.github/workflows/deploy.yml` runs on every push to `main`, or on demand: it installs with `npm ci`, runs `npm run check`, uploads `dist/` as a Pages artifact and deploys it. Nothing is pushed to a branch, so a failed build leaves the published site untouched.
 
-Two settings belong to the repository, not to the code:
-
-- **Variables → `SITE_URL`**, for example `https://ity.moe`. The build reads the origin from there and fails with a clear message when it is missing or malformed, so a deploy can never publish links to a placeholder.
-- **Settings → Pages → Source: GitHub Actions**, with the custom domain set next to it. The site links to itself from the root, so it has to be served from a domain root: a project path such as `https://user.github.io/clog/` would break every link.
+One setting belongs to the repository, not to the code: **Settings → Pages → Source: GitHub Actions**, with the custom domain set next to it. The site links to itself from the root, so it has to be served from a domain root: a project path such as `https://user.github.io/clog/` would break every link. Moving to another domain is one line in `src/lib/config.ts` plus that setting.
 
 ## Feed
 
@@ -142,13 +139,16 @@ Two settings belong to the repository, not to the code:
 <link rel="alternate" type="application/atom+xml" href="/feed.xml" />
 ```
 
-Atom needs absolute links, and a static build cannot infer its own origin, so the build reads it from the `SITE_URL` environment variable:
+Atom needs absolute links, and a static build cannot infer its own origin, so the origin lives in `src/lib/config.ts` next to the rest of the site's identity:
 
-```sh
-SITE_URL=https://ity.moe npm run build
+```ts
+export const site = {
+  url: "https://blog.ity.moe",
+  ...
+};
 ```
 
-`.env.example` shows the one line that belongs in a local `.env`, which the npm scripts load with `--env-file-if-exists` and git ignores. `npm run serve` fills in `http://localhost:<port>` when no origin is set, so a local preview links to itself. A missing or malformed origin fails the build instead of emitting links to a placeholder.
+The build parses it before rendering and refuses an origin that carries a path: a bare host is what the absolute links need. A local preview links to the live origin, which is harmless for a file that only crawlers read.
 
 Dates are UTC midnight of the post date rather than build time, so rebuilding an unchanged site produces a byte-identical feed.
 

@@ -73,9 +73,6 @@ async function handle(request: IncomingMessage, response: ServerResponse): Promi
 }
 
 export async function serve(port: number): Promise<void> {
-  // a local run publishes itself, so the build has an origin without one being configured
-  process.env.SITE_URL ??= `http://localhost:${port}`;
-
   const server = createServer((request, response) => {
     void handle(request, response).catch(() => {
       if (response.headersSent) {

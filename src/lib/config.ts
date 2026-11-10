@@ -4,6 +4,7 @@ export interface NavItem {
 }
 
 export const site = {
+  url: "https://blog.ity.moe",
   title: "苏斯基的博客",
   motto: "星空辽阔，何处是乡",
   lang: "zh-CN",

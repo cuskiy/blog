@@ -3,7 +3,6 @@ import type { Assets } from "../lib/assets.ts";
 import { site } from "../lib/config.ts";
 import { html } from "../lib/html.ts";
 import { friends } from "../lib/links.ts";
-import { siteOrigin } from "../lib/origin.ts";
 
 export function linksPage(assets: Assets): string {
   const cards = friends.map(
@@ -28,7 +27,7 @@ ${cards}
   <div class="site-card">
     <dl>
       <dt>头像</dt>
-      <dd>${siteOrigin()}/assets/avatar/cuskiy.svg</dd>
+      <dd>${site.url}/assets/avatar/cuskiy.svg</dd>
       <dt>标题</dt>
       <dd>${site.title}</dd>
       <dt>座右铭</dt>
