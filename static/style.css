@@ -782,6 +782,24 @@ main {
       color: var(--surface-text);
       font-weight: 600;
     }
+
+    /* the first click fetches the player, so the row says it is working; the ellipsis sits
+       after the whole row so a truncated title cannot clip it away */
+    &[aria-busy="true"] {
+      cursor: progress;
+    }
+
+    &[aria-busy="true"]::after {
+      content: "…";
+    }
+
+    /* the message travels in the attribute, so the wording stays in the client script */
+    &[data-failed]::after {
+      content: attr(data-failed);
+      color: var(--page-text-muted);
+      font-size: var(--text-sm);
+      white-space: nowrap;
+    }
   }
 
   & .music-title {

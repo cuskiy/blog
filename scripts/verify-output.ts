@@ -1,5 +1,5 @@
 import { readdir, readFile } from "node:fs/promises";
-import { join } from "node:path";
+import { dirname, join } from "node:path";
 
 import { transform } from "esbuild";
 
@@ -179,6 +179,12 @@ async function main(): Promise<void> {
     const code = await readFile(script, "utf8");
     if (code.length === 0) fail(script, "empty");
     if (/sourceMappingURL|eval\(|new Function\(/u.test(code)) fail(script, "unexpected code");
+
+    // a split bundle refers to its chunks by name; a missing one only shows up in the browser
+    for (const [, target] of code.matchAll(/(?:from|import)\("\.\/([\w.-]+\.js)"\)/gu)) {
+      const sibling = join(dirname(script), target ?? "");
+      if (!files.has(sibling.slice(dist.length + 1))) fail(script, `imports missing ${target}`);
+    }
   }
 
   if (failures.length > 0) {

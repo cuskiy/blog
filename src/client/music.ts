@@ -1,37 +1,63 @@
-import { Player } from "./audio.ts";
+import type { PlaybackState, Player } from "./audio.ts";
 import { element } from "./dom.ts";
 
 const room = element<HTMLElement>(".music-room");
 const tracks = [...document.querySelectorAll<HTMLButtonElement>("[data-track]")];
 
-const player = new Player(() => {
-  room.toggleAttribute("data-playing", false);
-});
+let player: Promise<Player> | undefined;
 
-async function select(index: number): Promise<void> {
-  const track = tracks[index];
-  const file = track?.dataset.track;
-  if (track === undefined || file === undefined) {
-    return;
-  }
-
+// the player reports what is actually running, so the page only has to draw it
+function render({ file, playing }: PlaybackState): void {
   for (const button of tracks) {
-    // aria-current takes a token, not an empty attribute: "true", or the attribute goes away
-    if (Number(button.dataset.index) === index) {
+    if (button.dataset.track === file) {
       button.setAttribute("aria-current", "true");
     } else {
       button.removeAttribute("aria-current");
     }
   }
-  room.toggleAttribute("data-playing", await player.toggle(file));
+  room.toggleAttribute("data-playing", playing);
+}
+
+// The player drags the whole synth behind it — 430 kB — so it is fetched on the first
+// click instead of holding up a page that is otherwise ready as soon as it renders.
+function loadPlayer(): Promise<Player> {
+  player ??= import("./audio.ts")
+    .then(({ Player: SynthPlayer }) => {
+      const synth = new SynthPlayer();
+      synth.onState = render;
+      return synth;
+    })
+    .catch((error: unknown) => {
+      // a failed fetch must not leave a rejected promise cached: the next click tries again
+      player = undefined;
+      throw error;
+    });
+  return player;
 }
 
 for (const track of tracks) {
   track.addEventListener("click", () => {
-    // a failed load leaves no player behind, so the error only has to be reported
-    select(Number(track.dataset.index)).catch((error: unknown) => {
-      console.error(error);
-    });
+    const file = track.dataset.track;
+    if (file === undefined) {
+      return;
+    }
+
+    // a new attempt supersedes any message left by a failed one
+    for (const button of tracks) {
+      button.removeAttribute("data-failed");
+    }
+
+    track.setAttribute("aria-busy", "true");
+    loadPlayer()
+      .then((synth) => synth.play(file))
+      .catch((error: unknown) => {
+        // the row says it failed, right where the click happened; the next click tries again
+        console.error(error);
+        track.setAttribute("data-failed", "播放失败");
+      })
+      .finally(() => {
+        track.removeAttribute("aria-busy");
+      });
   });
 }
 

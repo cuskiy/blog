@@ -29,8 +29,6 @@ jobs:
 
       - name: Build and check
         run: npm run check
-        env:
-          SITE_URL: ${{ vars.SITE_URL }}
 
       - uses: actions/configure-pages@v6
 
