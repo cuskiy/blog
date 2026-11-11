@@ -37,7 +37,7 @@ ${cards}
   <div class="site-card">
     <dl>
       <dt>头像</dt>
-      <dd>${site.url}${avatar(assets, "cuskiy.svg")}</dd>
+      <dd>${site.url}${assets.siteAvatar}</dd>
       <dt>标题</dt>
       <dd>${site.title}</dd>
       <dt>座右铭</dt>

@@ -4,10 +4,6 @@ export interface Icon {
   readonly type: string;
 }
 
-// The site's own avatar goes out as a blogroll address, so it keeps its name where every
-// other asset carries a hash of its bytes.
-export const siteAvatar = "cuskiy.svg";
-
 // Written by the build, read by the search page, and kept out of both service worker caches.
 export const searchIndexUrl = "/assets/search.json";
 
@@ -19,5 +15,7 @@ export interface Assets {
   readonly favicon: string;
   readonly icons: readonly Icon[];
   readonly art: string;
+  // the site's own avatar: a blogroll address, so it keeps the name it is published under
+  readonly siteAvatar: string;
   readonly avatars: Readonly<Record<string, string>>;
 }

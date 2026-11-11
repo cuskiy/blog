@@ -22,12 +22,15 @@ declare const __ASSET_VERSION__: string;
 // they keep a cache of their own and survive that swap.
 const assetCache = `blog-assets-${__ASSET_VERSION__}`;
 
+const contentAddressed = /^\/assets\/(?:js|processor)\/|^\/assets\/[0-9a-f]{10}\./u;
+
+// Only a name that carries its own content may be kept forever. Everything else under
+// /assets — the search index, the site's own avatar — is fetched again, so it cannot go stale.
 function cacheFor(url: URL): string | undefined {
   if (url.pathname.startsWith("/assets/soundfont/") || url.pathname.startsWith("/assets/midi/")) {
     return dataCache;
   }
-  // the search index is neither hashed nor stable, so it stays out
-  if (url.pathname.startsWith("/assets/") && !url.pathname.endsWith("/search.json")) {
+  if (contentAddressed.test(url.pathname)) {
     return assetCache;
   }
   return undefined;

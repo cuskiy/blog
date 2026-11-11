@@ -26,7 +26,8 @@ const assets: Assets = {
   favicon: "/assets/favicon.ico",
   icons: [{ src: "/assets/icon-192.png", sizes: "192x192", type: "image/png" }],
   art: "/assets/lineart.webp",
-  avatars: { "cuskiy.svg": "/assets/cuskiy.svg" },
+  siteAvatar: "/assets/cuskiy.svg",
+  avatars: { "sakura.webp": "/assets/a0b1e4f593.webp" },
 };
 
 function post(slug: string, title: string): Post {
