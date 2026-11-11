@@ -7,7 +7,7 @@ export function pagePage(page: Page, assets: Assets): string {
   return layout({
     assets,
     title: page.title,
-    path: `/${page.slug}/`,
+    path: page.route.url,
     body: html`  <article>
     <header class="page-head">
       <h1>${page.title}</h1>

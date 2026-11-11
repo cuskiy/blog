@@ -1,5 +1,5 @@
 {
-  "name": "clog",
+  "name": "blog",
   "version": "0.1.0",
   "private": true,
   "type": "module",
@@ -17,7 +17,7 @@
     "test": "node --test \"test/**/*.test.ts\"",
     "check": "npm run code && npm test && node src/cli.ts build && npm run verify:output",
     "verify:output": "node scripts/verify-output.ts",
-    "lint:css": "stylelint \"static/*.css\""
+    "lint:css": "stylelint \"src/assets/*.css\""
   },
   "dependencies": {
     "@djot/djot": "^0.3.2",

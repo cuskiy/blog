@@ -1,4 +1,4 @@
-export interface Friend {
+interface Friend {
   readonly name: string;
   readonly url: string;
   readonly avatar: string;

@@ -1,5 +1,6 @@
 import { layout } from "../components/layout.ts";
 import type { Assets } from "../lib/assets.ts";
+import { routes } from "../lib/config.ts";
 import type { Track } from "../lib/content/index.ts";
 import { html } from "../lib/html.ts";
 
@@ -19,7 +20,7 @@ export function musicPage(tracks: readonly Track[], assets: Assets): string {
   return layout({
     assets,
     title: "音乐",
-    path: "/music/",
+    path: routes.music,
     heading: "音乐",
     script: assets.scripts.music,
     body: html`  <div class="music-room">
@@ -28,7 +29,7 @@ ${rows}
     </ol>
 
     <figure class="music-art">
-      <img src="/assets/music/lineart.webp" alt="线稿插画，作者 たんたんめん" width="1280" height="1634" loading="lazy" decoding="async">
+      <img src="${assets.art}" alt="线稿插画，作者 たんたんめん" width="1280" height="1634" loading="lazy" decoding="async">
     </figure>
 
     <noscript>
@@ -44,7 +45,7 @@ ${rows}
         <dt>音源</dt>
         <dd>General User GS SoundFont</dd>
         <dt>来源</dt>
-        <dd>MIDI 文件来自 <a href="https://www.midishow.com/">midishow</a>，版权归原作者，仅供个人欣赏</dd>
+        <dd>MIDI 文件来自 <a href="https://www.midishow.com/" rel="noopener">midishow</a>，版权归原作者，仅供个人欣赏</dd>
       </dl>
     </footer>
   </div>`,

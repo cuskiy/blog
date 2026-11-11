@@ -1,5 +1,6 @@
 import { layout } from "../components/layout.ts";
 import type { Assets } from "../lib/assets.ts";
+import { routes } from "../lib/config.ts";
 import { contacts, gpgFingerprint } from "../lib/contact.ts";
 import type { Contact } from "../lib/contact.ts";
 import { html } from "../lib/html.ts";
@@ -9,7 +10,7 @@ const title = "关于";
 
 function contactValue(contact: Contact): Html {
   if (contact.kind === "plain") {
-    return html`<a href="${contact.href}">${contact.value}</a>`;
+    return html`<a href="${contact.href}" rel="noopener">${contact.value}</a>`;
   }
   // the address arrives base64 encoded and is filled in by src/client/about.ts
   return html`<span data-contact="${contact.prefix}" data-encoded="${contact.encoded}"></span>`;
@@ -38,7 +39,7 @@ export function aboutPage(assets: Assets): string {
   return layout({
     assets,
     title,
-    path: "/about/",
+    path: routes.about,
     // the title stays in the document outline only; the page is the contact list
     heading: title,
     body: html`  <article>

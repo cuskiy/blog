@@ -13,5 +13,7 @@ export function notFoundPage(assets: Assets): string {
     <p><a href="/">返回首页</a></p>
   </div>`,
     script: assets.scripts.oneko,
+    // an error page has nothing canonical about it
+    canonical: false,
   });
 }

@@ -1,3 +1,5 @@
+import { routes } from "../config.ts";
+import { route } from "../ids.ts";
 import type { Post, Tag } from "./model.ts";
 
 export function collectTags(posts: readonly Post[]): Tag[] {
@@ -15,6 +17,10 @@ export function collectTags(posts: readonly Post[]): Tag[] {
   }
 
   return Object.entries(byName)
-    .map(([name, entries]) => ({ name, posts: (entries ?? []).map((entry) => entry.post) }))
+    .map(([name, entries]) => ({
+      name,
+      route: route(routes.tags, name),
+      posts: (entries ?? []).map((entry) => entry.post),
+    }))
     .toSorted((a, b) => a.name.localeCompare(b.name));
 }

@@ -1,12 +1,13 @@
 import { layout } from "../components/layout.ts";
 import type { Assets } from "../lib/assets.ts";
+import { routes } from "../lib/config.ts";
 import { html } from "../lib/html.ts";
 
 export function searchPage(assets: Assets): string {
   return layout({
     assets,
     title: "搜索",
-    path: "/search/",
+    path: routes.search,
     heading: "搜索",
     script: assets.scripts.search,
     body: html`  <form class="search-form" role="search">

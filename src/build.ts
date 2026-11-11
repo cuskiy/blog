@@ -1,15 +1,16 @@
-import { createHash } from "node:crypto";
-import { cp, mkdir, readFile, rename, rm, writeFile } from "node:fs/promises";
-import { basename, dirname, join } from "node:path";
+import { cp, mkdir, readdir, readFile, rename, rm, writeFile } from "node:fs/promises";
+import { basename, dirname, extname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
 import { build as esbuild } from "esbuild";
 import { minify as minifyHtml } from "html-minifier-terser";
 
+import { pageUrl } from "./components/pagination.ts";
+import { searchIndexUrl } from "./lib/assets.ts";
 import type { Assets } from "./lib/assets.ts";
-import { perPage, site } from "./lib/config.ts";
+import { perPage, routes, site } from "./lib/config.ts";
 import { collectTags, loadMemos, loadPages, loadPosts, loadTracks, searchIndex } from "./lib/content/index.ts";
-import { exists } from "./lib/fs.ts";
+import { assertDistinct, hashId, indexFile } from "./lib/ids.ts";
 import { friends } from "./lib/links.ts";
 import { manifest } from "./lib/manifest.ts";
 import { paginate } from "./lib/paginate.ts";
@@ -30,12 +31,9 @@ export const dist = join(root, "dist");
 const staging = join(root, "dist.tmp");
 const lock = join(root, "dist.lock");
 
-function hash(content: string | Uint8Array): string {
-  return createHash("sha256").update(content).digest("hex").slice(0, 8);
-}
-
 async function emit(path: string, content: string): Promise<void> {
-  const target = join(staging, path);
+  // a leading slash belongs to the address, not to the path inside dist
+  const target = join(staging, path.replace(/^\//u, ""));
   await mkdir(dirname(target), { recursive: true });
   const body = path.endsWith(".html")
     ? await minifyHtml(content, { collapseWhitespace: true, removeComments: true })
@@ -43,18 +41,23 @@ async function emit(path: string, content: string): Promise<void> {
   await writeFile(target, body, "utf8");
 }
 
-// a hashed name, so the browser and the service worker may cache it forever
-async function emitHashed(dir: string, name: string, extension: string, content: Uint8Array): Promise<string> {
-  const file = `${name}.${hash(content)}.${extension}`;
+// the name is the content: nothing readable, and a cached copy can never be stale
+async function writeAsset(dir: string, extension: string, contents: Uint8Array): Promise<string> {
+  const file = `${hashId(contents)}${extension}`;
   const target = join(staging, dir, file);
   await mkdir(dirname(target), { recursive: true });
-  await writeFile(target, content);
+  await writeFile(target, contents);
   return `/${dir}/${file}`;
+}
+
+// a file that is copied as it stands: same rule, the id comes from the bytes
+async function copyAsset(source: string): Promise<string> {
+  return writeAsset("assets", extname(source), await readFile(join(root, "src/assets", source)));
 }
 
 async function compileStyle(): Promise<Uint8Array> {
   const output = await esbuild({
-    entryPoints: [join(root, "static/style.css")],
+    entryPoints: [join(root, "src/assets/style.css")],
     bundle: false,
     minify: true,
     target: "esnext",
@@ -75,10 +78,14 @@ interface ScriptOptions {
 
 // Splitting keeps the heavy music player off the critical path: the entry stays tiny and the
 // chunks arrive when they are imported, each under its own content hash.
-async function compileScript(
-  name: string,
-  { format, define }: ScriptOptions,
-): Promise<readonly { readonly name: string; readonly contents: Uint8Array }[]> {
+interface CompiledScript {
+  readonly entry: { readonly name: string; readonly contents: Uint8Array };
+  readonly files: readonly { readonly name: string; readonly contents: Uint8Array }[];
+}
+
+// The bundle names itself after its contents, and points at its chunks by name, so the
+// names have to be esbuild's own: ours would break the imports it writes.
+async function compileScript(name: string, { format, define }: ScriptOptions): Promise<CompiledScript> {
   const output = await esbuild({
     entryPoints: [join(root, "src/client", `${name}.ts`)],
     bundle: true,
@@ -89,40 +96,45 @@ async function compileScript(
     write: false,
     logLevel: "silent",
     outdir: "assets/js",
-    entryNames: "[name].[hash]",
-    chunkNames: "chunk.[hash]",
+    entryNames: "[hash]",
+    chunkNames: "[hash]",
+    metafile: true,
     ...(define === undefined ? {} : { define }),
   });
-  return output.outputFiles.map((file) => ({ name: basename(file.path), contents: file.contents }));
-}
 
-async function emitScript(name: string, options: ScriptOptions): Promise<string> {
-  let entry: string | undefined;
-
-  for (const file of await compileScript(name, options)) {
-    const target = join(staging, "assets", "js", file.name);
-    await mkdir(dirname(target), { recursive: true });
-    await writeFile(target, file.contents);
-    if (file.name.startsWith(`${name}.`)) {
-      entry = `/assets/js/${file.name}`;
-    }
-  }
-
+  const files = output.outputFiles.map((file) => ({ name: basename(file.path), contents: file.contents }));
+  const entryName = Object.entries(output.metafile.outputs).find(
+    ([, summary]) => summary.entryPoint !== undefined,
+  )?.[0];
+  const entry = files.find((file) => file.name === basename(entryName ?? ""));
   if (entry === undefined) {
     throw new Error(`esbuild produced no entry for ${name}`);
   }
-  return entry;
+  return { entry, files };
+}
+
+async function emitScript(name: string, options: ScriptOptions): Promise<string> {
+  const { entry, files } = await compileScript(name, options);
+  for (const file of files) {
+    const target = join(staging, "assets", "js", file.name);
+    await mkdir(dirname(target), { recursive: true });
+    await writeFile(target, file.contents);
+  }
+  return `/assets/js/${entry.name}`;
 }
 
 // the worklet is fetched by URL from inside the player, so it carries its own hash: a cached
 // copy can never end up paired with a newer library
 async function emitProcessor(): Promise<string> {
   const source = await readFile(join(root, "node_modules", "spessasynth_lib", "dist", "spessasynth_processor.min.js"));
-  return emitHashed("assets/js", "spessasynth_processor", "js", source);
+  return writeAsset("assets/processor", ".js", source);
 }
 
 async function emitWorker(version: string): Promise<void> {
-  const files = await compileScript("sw", { format: "iife", define: { __ASSET_VERSION__: JSON.stringify(version) } });
+  const { files } = await compileScript("sw", {
+    format: "iife",
+    define: { __ASSET_VERSION__: JSON.stringify(version) },
+  });
   const [worker] = files;
   if (worker === undefined || files.length !== 1) {
     throw new Error("the service worker must compile to exactly one file");
@@ -142,20 +154,34 @@ async function bundle(): Promise<Assets> {
     about: await emitScript("about", { format: "esm" }),
   };
 
-  const css = await emitHashed("assets", "style", "css", await compileStyle());
+  const css = await writeAsset("assets", ".css", await compileStyle());
+  const favicon = await copyAsset("favicon.ico");
+  const icons = [
+    { src: await copyAsset("icon-192.png"), sizes: "192x192", type: "image/png" },
+    { src: await copyAsset("icon-512.png"), sizes: "512x512", type: "image/png" },
+  ];
+  const art = await copyAsset("music/lineart.webp");
+
+  const avatars: Record<string, string> = {};
+  for (const file of await readdir(join(root, "src/assets", "avatar"))) {
+    avatars[file] = await copyAsset(join("avatar", file));
+  }
+  for (const friend of friends) {
+    if (avatars[friend.avatar] === undefined) {
+      throw new Error(`${friend.avatar}: listed in links.ts but missing from src/assets/avatar`);
+    }
+  }
 
   // the worker stamps its asset cache with this, so a deploy retires the previous one
-  await emitWorker(hash([css, ...Object.values(scripts)].join(" ")));
+  await emitWorker(hashId([css, ...Object.values(scripts), ...Object.values(avatars)].join(" ")));
 
-  for (const asset of ["avatar", "midi", "music", "soundfont"]) {
+  // the tracks and the font are large and are addressed by name, so they keep their names
+  for (const asset of ["midi", "soundfont"]) {
     await cp(join(root, "static", asset), join(staging, "assets", asset), { recursive: true });
-  }
-  for (const file of ["favicon.ico", "icon-192.png", "icon-512.png"]) {
-    await cp(join(root, "static", file), join(staging, "assets", file));
   }
   await cp(join(root, "static", "robots.txt"), join(staging, "robots.txt"));
 
-  return { css, scripts };
+  return { css, scripts, favicon, icons, art, avatars };
 }
 
 async function render(assets: Assets): Promise<number> {
@@ -167,42 +193,41 @@ async function render(assets: Assets): Promise<number> {
   const postPages = paginate(posts, perPage.posts);
   for (const [index, chunk] of postPages.entries()) {
     const position = { page: index + 1, total: postPages.length };
-    await emit(
-      index === 0 ? "index.html" : join("page", String(index + 1), "index.html"),
-      postsPage(chunk, position, assets),
-    );
+    await emit(indexFile(pageUrl(routes.home, position.page)), postsPage(chunk, position, assets));
   }
 
   const memoPages = paginate(memos, perPage.memos);
   for (const [index, chunk] of memoPages.entries()) {
     const position = { page: index + 1, total: memoPages.length };
-    await emit(
-      index === 0 ? join("memo", "index.html") : join("memo", "page", String(index + 1), "index.html"),
-      memoPage(chunk, position, assets),
-    );
+    await emit(indexFile(pageUrl(routes.memos, position.page)), memoPage(chunk, position, assets));
   }
 
   await emit("feed.xml", feed(posts));
-  await emit("manifest.webmanifest", JSON.stringify(manifest, null, 2));
+  await emit("manifest.webmanifest", JSON.stringify(manifest(assets), null, 2));
   await emit("404.html", notFoundPage(assets));
-  await emit(join("about", "index.html"), aboutPage(assets));
-  await emit(join("links", "index.html"), linksPage(assets));
-  await emit(join("tags", "index.html"), tagIndexPage(tags, assets));
-  await emit(join("search", "index.html"), searchPage(assets));
-  await emit(join("music", "index.html"), musicPage(await loadTracks(join(root, "static", "midi")), assets));
-  await emit(join("assets", "search.json"), JSON.stringify(searchIndex(posts, memos)));
+  await emit(indexFile(routes.about), aboutPage(assets));
+  await emit(indexFile(routes.links), linksPage(assets));
+  await emit(indexFile(routes.tags), tagIndexPage(tags, assets));
+  await emit(indexFile(routes.search), searchPage(assets));
+  await emit(indexFile(routes.music), musicPage(await loadTracks(join(root, "static", "midi")), assets));
+  await emit(searchIndexUrl, JSON.stringify(searchIndex(posts, memos)));
 
-  for (const page of pages) {
-    await emit(join(page.slug, "index.html"), pagePage(page, assets));
-  }
-  for (const tag of tags) {
-    await emit(join("tags", tag.name, "index.html"), tagPage(tag, assets));
-  }
-  for (const [index, post] of posts.entries()) {
-    await emit(
-      join("posts", post.slug, "index.html"),
-      postPage({ post, older: posts[index + 1], newer: posts[index - 1] }, assets),
-    );
+  // every address below was decided when the file was read; nothing here builds a path
+  const entries = [
+    ...pages.map((page) => ({ name: `${page.slug}.dj`, route: page.route, render: () => pagePage(page, assets) })),
+    ...tags.map((tag) => ({ name: `tag ${tag.name}`, route: tag.route, render: () => tagPage(tag, assets) })),
+    ...posts.map((post, index) => ({
+      name: `${post.slug}.dj`,
+      route: post.route,
+      render: () => postPage({ post, older: posts[index + 1], newer: posts[index - 1] }, assets),
+    })),
+  ];
+
+  assertDistinct(entries);
+
+  for (const entry of entries) {
+    await emit(entry.route.file, entry.render());
+    console.log(`  ${entry.name} → ${entry.route.url}`);
   }
 
   return posts.length;
@@ -212,13 +237,6 @@ export async function build(): Promise<number> {
   // the feed and the links page build absolute links, so the origin has to be a bare one
   if (new URL(site.url).pathname !== "/") {
     throw new Error(`site.url must be a bare origin, got ${JSON.stringify(site.url)}`);
-  }
-
-  // a friend card whose avatar is missing would ship a broken image
-  for (const friend of friends) {
-    if (!(await exists(join(root, "static", "avatar", friend.avatar)))) {
-      throw new Error(`${friend.avatar}: listed in links.ts but missing from static/avatar`);
-    }
   }
 
   // two builds sharing one staging directory would interleave and leave a mixed dist behind

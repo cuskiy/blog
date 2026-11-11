@@ -1,6 +1,6 @@
 import type { Track } from "./model.ts";
 
-// The playlist: one line per track, in page order. Paths come from the file name.
+// The playlist: one line per track, in page order.
 export const TRACKS: readonly Track[] = [
   { file: "last-summer.mid", title: "去年夏天" },
   { file: "the-day-you-went-away.mid", title: "The Day You Went Away" },

@@ -1,15 +1,15 @@
 import { readFile, readdir } from "node:fs/promises";
 import { join } from "node:path";
 
+import { routes } from "../config.ts";
 import { renderDjot } from "../djot.ts";
 import { exists } from "../fs.ts";
 import { readMemoDate, readPageMeta, readPostMeta, splitFrontmatter } from "../frontmatter.ts";
+import { hashId, route } from "../ids.ts";
 import type { Memo, Page, Post, Track } from "./model.ts";
 import { TRACKS } from "./music.ts";
 
 const slugPattern = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
-
-const reservedSlugs = new Set(["posts", "tags", "assets", "index", "page", "memo"]);
 
 async function sourceFiles(dir: string): Promise<string[]> {
   return (await readdir(dir)).filter((file) => file.endsWith(".dj")).toSorted();
@@ -37,6 +37,7 @@ export async function loadPosts(dir: string): Promise<Post[]> {
 
     posts.push({
       slug,
+      route: route(routes.posts, slug),
       title: meta.title,
       date: meta.date,
       tags: meta.tags,
@@ -57,13 +58,9 @@ export async function loadPages(dir: string): Promise<Page[]> {
   const pages: Page[] = [];
   for (const file of await sourceFiles(dir)) {
     const slug = readSlug(file);
-    if (reservedSlugs.has(slug)) {
-      throw new Error(`${file}: ${JSON.stringify(slug)} is already used by the build output`);
-    }
-
     const { fields, body } = splitFrontmatter(await readFile(join(dir, file), "utf8"), file);
     const { title } = readPageMeta(fields, file);
-    pages.push({ slug, title, html: renderDjot(body, file) });
+    pages.push({ slug, route: route(routes.pages, slug), title, html: renderDjot(body, file) });
   }
   return pages;
 }
@@ -73,12 +70,17 @@ export async function loadMemos(dir: string): Promise<Memo[]> {
   const memos: Memo[] = [];
 
   for (const file of files) {
-    const id = readSlug(file);
+    const slug = readSlug(file);
     const { fields, body } = splitFrontmatter(await readFile(join(dir, file), "utf8"), file);
-    memos.push({ id, date: readMemoDate(fields, file), html: renderDjot(body, file) });
+    memos.push({
+      slug,
+      anchor: `m-${hashId(slug)}`,
+      date: readMemoDate(fields, file),
+      html: renderDjot(body, file),
+    });
   }
 
-  return memos.toSorted((a, b) => (a.date === b.date ? b.id.localeCompare(a.id) : a.date < b.date ? 1 : -1));
+  return memos.toSorted((a, b) => (a.date === b.date ? b.slug.localeCompare(a.slug) : a.date < b.date ? 1 : -1));
 }
 
 export async function loadTracks(dir: string): Promise<readonly Track[]> {

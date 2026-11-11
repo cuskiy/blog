@@ -1,13 +1,13 @@
-export interface Frontmatter {
+interface Frontmatter {
   readonly fields: Readonly<Record<string, string>>;
   readonly body: string;
 }
 
-export interface PageMeta {
+interface PageMeta {
   readonly title: string;
 }
 
-export interface PostMeta {
+interface PostMeta {
   readonly title: string;
   readonly date: string;
   readonly tags: readonly string[];
@@ -98,11 +98,6 @@ function pickTags(fields: Readonly<Record<string, string>>, file: string): reado
   }
   if (new Set(tags).size !== tags.length) {
     fail(file, `tags contains a duplicate: ${tags.join(", ")}`);
-  }
-  for (const tag of tags) {
-    if (tag.includes("/") || tag.includes("\\") || tag.startsWith(".")) {
-      fail(file, `a tag may not contain a slash or start with a dot: ${JSON.stringify(tag)}`);
-    }
   }
   return tags;
 }

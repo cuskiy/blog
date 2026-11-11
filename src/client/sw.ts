@@ -20,7 +20,7 @@ declare const __ASSET_VERSION__: string;
 // Hashed files may be cached forever, so they live in a cache stamped with the build: a deploy
 // retires the previous one whole. The soundfont and the tracks carry no hash and are large, so
 // they keep a cache of their own and survive that swap.
-const assetCache = `clog-assets-${__ASSET_VERSION__}`;
+const assetCache = `blog-assets-${__ASSET_VERSION__}`;
 
 function cacheFor(url: URL): string | undefined {
   if (url.pathname.startsWith("/assets/soundfont/") || url.pathname.startsWith("/assets/midi/")) {

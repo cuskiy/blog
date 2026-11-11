@@ -1,5 +1,8 @@
+import type { Route } from "../ids.ts";
+
 export interface Post {
   readonly slug: string;
+  readonly route: Route;
   readonly title: string;
   readonly date: string;
   readonly tags: readonly string[];
@@ -8,13 +11,15 @@ export interface Post {
 }
 
 export interface Memo {
-  readonly id: string;
+  readonly slug: string;
+  readonly anchor: string;
   readonly date: string;
   readonly html: string;
 }
 
 export interface Tag {
   readonly name: string;
+  readonly route: Route;
   readonly posts: readonly Post[];
 }
 
@@ -25,6 +30,7 @@ export interface Track {
 
 export interface Page {
   readonly slug: string;
+  readonly route: Route;
   readonly title: string;
   readonly html: string;
 }
@@ -35,6 +41,6 @@ export interface SearchEntry {
   readonly url: string;
   readonly date: string;
   readonly dateLabel: string;
-  readonly tags: readonly string[];
+  readonly tags: readonly { readonly name: string; readonly url: string }[];
   readonly text: string;
 }

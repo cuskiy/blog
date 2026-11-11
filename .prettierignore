@@ -3,6 +3,6 @@ dist.tmp
 node_modules
 static/midi
 static/soundfont
-static/music
-static/avatar
+src/assets/avatar
+src/assets/music
 package-lock.json

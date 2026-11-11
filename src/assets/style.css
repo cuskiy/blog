@@ -32,6 +32,10 @@
     color-mix(in oklab, var(--ink) 80%, var(--surface)),
     color-mix(in oklab, var(--ink) 84%, var(--surface))
   );
+  --surface-text-soft: light-dark(
+    color-mix(in oklab, var(--ink) 74%, var(--surface)),
+    color-mix(in oklab, var(--ink) 78%, var(--surface))
+  );
   --surface-text-muted: light-dark(
     color-mix(in oklab, var(--ink) 66%, var(--surface)),
     color-mix(in oklab, var(--ink) 70%, var(--surface))
@@ -39,6 +43,10 @@
   --surface-hover-text: light-dark(
     color-mix(in oklab, var(--ink) 80%, var(--surface-hover)),
     color-mix(in oklab, var(--ink) 84%, var(--surface-hover))
+  );
+  --surface-hover-text-soft: light-dark(
+    color-mix(in oklab, var(--ink) 74%, var(--surface-hover)),
+    color-mix(in oklab, var(--ink) 78%, var(--surface-hover))
   );
   --surface-hover-text-muted: light-dark(
     color-mix(in oklab, var(--ink) 66%, var(--surface-hover)),
@@ -88,11 +96,10 @@
   --wave-width: 4rem;
   --wave-height: 1rem;
 
-  --card-min: 23rem;
-  --friend-min: 15.2rem;
+  --friend-min: clamp(13rem, 18vw, 15.2rem);
   --track-min: clamp(9.75rem, 16vw, 12rem);
   --input-min: 11.2rem;
-  --max-width: 60rem;
+  --max-width: 42rem;
   --page-pad: clamp(1rem, 4.5vw, 1.6rem);
 
   /* a wave drift travels exactly one dot gap, so the pattern lands back on itself */
@@ -165,7 +172,31 @@ mark {
 
 /* header */
 
+/* The one control that exists only for a keyboard. It covers the header it belongs to, one
+   step darker, and slides away when it loses focus: it is moved, never removed from the tab
+   order, so every pass through the page finds it again. */
+.skip-link {
+  position: absolute;
+  inset-block: 0;
+  inset-inline: 0;
+  display: flex;
+  align-items: center;
+  padding-inline: max(var(--space-3), calc((100% - var(--max-width)) / 2 + var(--space-3)));
+  background: var(--surface-hover);
+  color: var(--surface-hover-text);
+  font-size: var(--text-sm);
+
+  /* moved out of sight rather than hidden, and it arrives at once: a state about focus
+     should not spend 200 ms sliding over the link that is about to receive it */
+  transform: translateY(-100%);
+
+  &:focus-visible {
+    transform: none;
+  }
+}
+
 .site-header {
+  position: relative;
   background: var(--surface);
   color: var(--surface-text);
 
@@ -183,10 +214,6 @@ mark {
   font-size: var(--text-lg);
   font-weight: 700;
   letter-spacing: -0.01em;
-
-  &:hover {
-    color: var(--surface-text-muted);
-  }
 }
 
 .site-nav {
@@ -349,7 +376,6 @@ main {
 .post-list,
 .memo-list {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(min(var(--card-min), 100%), 1fr));
   gap: var(--space-5);
   margin: 0;
   padding: 0;
@@ -358,11 +384,14 @@ main {
 
 .post,
 .memo {
-  display: grid;
-  align-content: start;
-  gap: var(--space-1);
   padding: var(--space-4);
   scroll-margin-block-start: var(--space-6);
+
+  & article {
+    display: grid;
+    align-content: start;
+    gap: var(--space-1);
+  }
 
   & h2 {
     margin: 0;
@@ -372,12 +401,7 @@ main {
   }
 }
 
-.post > a {
-  display: block;
-}
-
 .post-meta,
-.post-excerpt,
 .memo-date {
   margin: 0;
   color: var(--surface-text-muted);
@@ -396,9 +420,17 @@ main {
   gap: var(--space-1) var(--space-3);
 }
 
+/* the summary sits a rank below the title and a rank above the meta, so it takes its own tone */
 .post-excerpt {
+  margin: 0;
+  color: var(--surface-text-soft);
   font-size: var(--text-md);
   text-wrap: pretty;
+
+  .post:hover &,
+  .post:focus-within & {
+    color: var(--surface-hover-text-soft);
+  }
 }
 
 /* a memo card is a grid item, so its body margins stay inside instead of collapsing:
@@ -571,6 +603,11 @@ main {
   }
 }
 
+/* inserted and removed text keep the body tone; only the line takes the muted one */
+.prose :is(ins, del) {
+  text-decoration-color: var(--page-text-muted);
+}
+
 /* prose: a block carries its own trailing gap and a heading its own leading one, so
    nested content (a paragraph inside dd or li) is spaced like the rest without a rule */
 
@@ -580,10 +617,17 @@ main {
     margin: 0 0 var(--space-5);
   }
 
-  & :is(h1, h2, h3, h4, h5, h6) {
+  & :is(h1, h2, h3) {
     margin-block: var(--space-6) var(--space-3);
     line-height: var(--leading-tight);
     text-wrap: balance;
+  }
+
+  /* h4 to h6 keep the body size, so they are emphasis rather than a further rank, and their
+     space says the same thing */
+  & :is(h4, h5, h6) {
+    margin-block: var(--space-5) var(--space-3);
+    line-height: var(--leading-tight);
   }
 
   & h1 {
@@ -596,10 +640,6 @@ main {
 
   & h3 {
     font-size: var(--text-lg);
-  }
-
-  & :is(h4, h5, h6) {
-    font-size: var(--text-md);
   }
 
   & p {
@@ -796,9 +836,13 @@ main {
     /* the message travels in the attribute, so the wording stays in the client script */
     &[data-failed]::after {
       content: attr(data-failed);
-      color: var(--page-text-muted);
+      color: var(--surface-text-muted);
       font-size: var(--text-sm);
       white-space: nowrap;
+    }
+
+    &[data-failed]:hover::after {
+      color: var(--surface-hover-text-muted);
     }
   }
 

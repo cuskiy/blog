@@ -8,6 +8,7 @@ for (const holder of document.querySelectorAll<HTMLElement>("[data-encoded]")) {
   const value = atob(encoded);
   const link = document.createElement("a");
   link.href = prefix + value;
+  link.rel = "noopener";
   link.textContent = value;
   holder.replaceChildren(link);
 }

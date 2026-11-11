@@ -90,12 +90,7 @@ describe("readPostMeta", () => {
     assert.throws(() => meta(valid.replace("CSS, Layout", "CSS, CSS")), /duplicate/);
   });
 
-  it("rejects tags that could escape the output directory", () => {
-    assert.throws(() => meta(valid.replace("CSS, Layout", "CSS, ..")), /may not contain a slash or start with a dot/);
-    assert.throws(
-      () => meta(valid.replace("CSS, Layout", "CSS, .hidden")),
-      /may not contain a slash or start with a dot/,
-    );
-    assert.throws(() => meta(valid.replace("CSS, Layout", "CSS, a/b")), /may not contain a slash or start with a dot/);
+  it("keeps a tag that would be a path elsewhere, because it is only text now", () => {
+    assert.deepEqual(meta(valid.replace("CSS, Layout", "C/C++, ..")).tags, ["C/C++", ".."]);
   });
 });

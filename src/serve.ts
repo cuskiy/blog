@@ -31,6 +31,7 @@ async function notFound(response: ServerResponse): Promise<void> {
     response.writeHead(404, { "content-type": htmlType });
     response.end(page);
   } catch {
+    // only reachable before the first build, when there is no page to send as it is
     response.writeHead(404, { "content-type": htmlType });
     response.end("<h1>404</h1>\n");
   }

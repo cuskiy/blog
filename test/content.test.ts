@@ -20,7 +20,7 @@ draft: ${options.draft === true ? "true" : "false"}
 }
 
 async function makeDir(files: Record<string, string>): Promise<string> {
-  const dir = await mkdtemp(join(tmpdir(), "clog-content-"));
+  const dir = await mkdtemp(join(tmpdir(), "blog-content-"));
   for (const [name, content] of Object.entries(files)) {
     await writeFile(join(dir, name), content);
   }
@@ -75,14 +75,8 @@ describe("loadPages", () => {
     await rm(dir, { recursive: true, force: true });
   });
 
-  it("rejects a slug the build already uses", async () => {
-    const dir = await makeDir({ "tags.dj": "---\ntitle: Tags\n---\n\nBody\n" });
-    await assert.rejects(() => loadPages(dir), /already used by the build output/);
-    await rm(dir, { recursive: true, force: true });
-  });
-
   it("treats a directory that is not there as a site with no extra pages", async () => {
-    assert.deepEqual(await loadPages(join(tmpdir(), "clog-no-such-pages-directory")), []);
+    assert.deepEqual(await loadPages(join(tmpdir(), "blog-no-such-pages-directory")), []);
   });
 });
 

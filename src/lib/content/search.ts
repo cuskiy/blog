@@ -1,4 +1,6 @@
+import { routes } from "../config.ts";
 import { formatDate } from "../date.ts";
+import { route } from "../ids.ts";
 import type { Memo, Post, SearchEntry } from "./model.ts";
 
 function plainText(html: string): string {
@@ -12,17 +14,17 @@ export function searchIndex(posts: readonly Post[], memos: readonly Memo[]): Sea
   const postEntries: SearchEntry[] = posts.map((post) => ({
     kind: "post",
     title: post.title,
-    url: `/posts/${post.slug}/`,
+    url: post.route.url,
     date: post.date,
     dateLabel: formatDate(post.date),
-    tags: post.tags,
+    tags: post.tags.map((name) => ({ name, url: route(routes.tags, name).url })),
     text: plainText(post.html),
   }));
 
   const memoEntries: SearchEntry[] = memos.map((memo) => ({
     kind: "memo",
     title: formatDate(memo.date),
-    url: `/memo/#m-${memo.id}`,
+    url: `${routes.memos}#${memo.anchor}`,
     date: memo.date,
     dateLabel: formatDate(memo.date),
     tags: [],

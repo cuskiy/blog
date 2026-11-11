@@ -3,6 +3,8 @@ import { dirname, join } from "node:path";
 
 import { transform } from "esbuild";
 
+import { site } from "../src/lib/config.ts";
+
 const dist = "dist";
 const failures: string[] = [];
 
@@ -113,6 +115,23 @@ function checkHtml(where: string, html: string, files: Set<string>): void {
   }
 }
 
+// a page is canonical at the address it is served from; the error page is the exception
+function checkCanonical(page: string, html: string): void {
+  const found = [...html.matchAll(/<link rel="canonical" href="([^"]*)">/gu)].map((match) => match[1]);
+  if (page === join(dist, "404.html")) {
+    if (found.length > 0) fail(page, "an error page has no canonical address");
+    return;
+  }
+
+  const address = `/${page.slice(dist.length + 1).replace(/index\.html$/u, "")}`;
+  const expected = `${site.url}${address}`;
+  if (found.length !== 1) {
+    fail(page, `expected one canonical link, found ${String(found.length)}`);
+  } else if (found[0] !== expected) {
+    fail(page, `canonical says ${String(found[0])}, the file is served at ${expected}`);
+  }
+}
+
 async function main(): Promise<void> {
   const paths = await walk(dist);
   const files = new Set(paths.map((path) => path.slice(dist.length + 1)));
@@ -123,12 +142,14 @@ async function main(): Promise<void> {
 
   if (!files.has("robots.txt")) {
     fail(dist, "no robots.txt");
-  } else if (!(await readFile(join(dist, "robots.txt"), "utf8")).includes("Disallow: /")) {
-    fail("robots.txt", "does not disallow every crawler");
+  } else if (/^\s*Disallow:\s*\/\s*$/mu.test(await readFile(join(dist, "robots.txt"), "utf8"))) {
+    fail("robots.txt", "still blocks every crawler");
   }
 
   for (const page of html) {
-    checkHtml(page, await readFile(page, "utf8"), files);
+    const source = await readFile(page, "utf8");
+    checkHtml(page, source, files);
+    checkCanonical(page, source);
   }
 
   const source = css === undefined ? undefined : await readFile(css, "utf8");
@@ -175,7 +196,7 @@ async function main(): Promise<void> {
   }
 
   // only the bundles built from our sources; the vendored worklet is copied verbatim
-  for (const script of paths.filter((path) => path.endsWith(".js") && !path.includes("spessasynth_processor"))) {
+  for (const script of paths.filter((path) => path.endsWith(".js") && !path.includes("/processor/"))) {
     const code = await readFile(script, "utf8");
     if (code.length === 0) fail(script, "empty");
     if (/sourceMappingURL|eval\(|new Function\(/u.test(code)) fail(script, "unexpected code");

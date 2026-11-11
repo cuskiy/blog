@@ -1,4 +1,3 @@
-import { tagPath } from "../lib/config.ts";
 import type { SearchEntry } from "../lib/content/model.ts";
 import { element } from "./dom.ts";
 
@@ -44,6 +43,8 @@ function card(entry: SearchEntry, needle: string): HTMLLIElement {
   const isMemo = entry.kind === "memo";
   const item = document.createElement("li");
   item.className = isMemo ? "memo" : "post";
+  const article = document.createElement("article");
+  item.append(article);
 
   const link = document.createElement("a");
   link.href = entry.url;
@@ -58,7 +59,7 @@ function card(entry: SearchEntry, needle: string): HTMLLIElement {
     markMatches(heading, entry.title, needle);
     link.append(heading);
   }
-  item.append(link);
+  article.append(link);
 
   if (!isMemo) {
     const meta = document.createElement("p");
@@ -69,25 +70,25 @@ function card(entry: SearchEntry, needle: string): HTMLLIElement {
     meta.append(time);
     for (const tag of entry.tags) {
       const anchor = document.createElement("a");
-      anchor.href = tagPath(tag);
-      markMatches(anchor, tag, needle);
+      anchor.href = tag.url;
+      markMatches(anchor, tag.name, needle);
       meta.append(anchor);
     }
-    item.append(meta);
+    article.append(meta);
   }
 
   if (entry.text.toLowerCase().includes(needle)) {
     const excerpt = document.createElement("p");
     excerpt.className = "post-excerpt";
     markMatches(excerpt, snippet(entry.text, needle), needle);
-    item.append(excerpt);
+    article.append(excerpt);
   }
 
   return item;
 }
 
 function searchable(entry: SearchEntry): string {
-  return [entry.title, entry.text, ...entry.tags].join(" ").toLowerCase();
+  return [entry.title, entry.text, ...entry.tags.map((tag) => tag.name)].join(" ").toLowerCase();
 }
 
 function filter(query: string): void {

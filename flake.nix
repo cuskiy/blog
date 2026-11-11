@@ -1,5 +1,5 @@
 {
-  description = "clog — a static blog generator for djot";
+  description = "blog — a static blog generator for djot";
 
   inputs.nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
 

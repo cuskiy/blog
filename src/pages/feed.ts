@@ -15,7 +15,7 @@ export function feed(posts: readonly Post[]): string {
   }
 
   const entries = posts.map((post) => {
-    const link = absolute(`/posts/${post.slug}/`);
+    const link = absolute(post.route.url);
     return html`  <entry>
     <title>${post.title}</title>
     <link href="${link}" rel="alternate"/>

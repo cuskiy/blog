@@ -163,7 +163,6 @@ export class Player {
     }
 
     await this.#load(file);
-    // the loaded track is the current one now, and stays silent until the gap is over
     this.#emit(false);
     await new Promise((resolve) => setTimeout(resolve, gap));
 
