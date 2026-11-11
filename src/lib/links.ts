@@ -52,6 +52,6 @@ export const friends: readonly Friend[] = [
     name: "pluie",
     url: "https://pluie.me",
     avatar: "pluie.png",
-    note: "普鲁伊"
-  }
+    note: "普鲁伊",
+  },
 ];
