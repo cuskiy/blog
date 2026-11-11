@@ -6,7 +6,7 @@ import { build as esbuild } from "esbuild";
 import { minify as minifyHtml } from "html-minifier-terser";
 
 import { pageUrl } from "./components/pagination.ts";
-import { searchIndexUrl } from "./lib/assets.ts";
+import { searchIndexUrl, siteAvatar } from "./lib/assets.ts";
 import type { Assets } from "./lib/assets.ts";
 import { perPage, routes, site } from "./lib/config.ts";
 import { collectTags, loadMemos, loadPages, loadPosts, loadTracks, searchIndex } from "./lib/content/index.ts";
@@ -53,6 +53,15 @@ async function writeAsset(dir: string, extension: string, contents: Uint8Array):
 // a file that is copied as it stands: same rule, the id comes from the bytes
 async function copyAsset(source: string): Promise<string> {
   return writeAsset("assets", extname(source), await readFile(join(root, "src/assets", source)));
+}
+
+// The one asset whose name is part of a promise to other sites. Its cache entry is retired
+// with the rest, so the bytes may change as long as the address does not.
+async function writeFixed(path: string, contents: Uint8Array): Promise<string> {
+  const target = join(staging, path);
+  await mkdir(dirname(target), { recursive: true });
+  await writeFile(target, contents);
+  return `/${path}`;
 }
 
 async function compileStyle(): Promise<Uint8Array> {
@@ -163,8 +172,16 @@ async function bundle(): Promise<Assets> {
   const art = await copyAsset("music/lineart.webp");
 
   const avatars: Record<string, string> = {};
+  // a fixed name cannot announce its own change, so its bytes join the version stamp
+  const fixed: string[] = [];
   for (const file of await readdir(join(root, "src/assets", "avatar"))) {
-    avatars[file] = await copyAsset(join("avatar", file));
+    const contents = await readFile(join(root, "src/assets", "avatar", file));
+    if (file === siteAvatar) {
+      avatars[file] = await writeFixed(`assets/${file}`, contents);
+      fixed.push(hashId(contents));
+    } else {
+      avatars[file] = await writeAsset("assets", extname(file), contents);
+    }
   }
   for (const friend of friends) {
     if (avatars[friend.avatar] === undefined) {
@@ -173,7 +190,7 @@ async function bundle(): Promise<Assets> {
   }
 
   // the worker stamps its asset cache with this, so a deploy retires the previous one
-  await emitWorker(hashId([css, ...Object.values(scripts), ...Object.values(avatars)].join(" ")));
+  await emitWorker(hashId([css, ...Object.values(scripts), ...Object.values(avatars), ...fixed].join(" ")));
 
   // the tracks and the font are large and are addressed by name, so they keep their names
   for (const asset of ["midi", "soundfont"]) {
