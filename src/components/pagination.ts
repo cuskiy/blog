@@ -6,7 +6,7 @@ export interface PagePosition {
   readonly total: number;
 }
 
-export interface Pagination extends PagePosition {
+interface Pagination extends PagePosition {
   readonly base: string;
 }
 

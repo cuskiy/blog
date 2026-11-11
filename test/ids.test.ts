@@ -44,14 +44,14 @@ describe("route", () => {
 });
 
 describe("assertDistinct", () => {
-  it("rejects two names that land on the same id", () => {
+  it("rejects two entries that would write the same file", () => {
     const shared = route("/posts/", "a");
     assert.throws(() => {
       assertDistinct([
         { name: "first", route: shared },
         { name: "second", route: { ...shared } },
       ]);
-    }, /share the id/u);
+    }, /both write/u);
   });
 
   it("accepts distinct names", () => {

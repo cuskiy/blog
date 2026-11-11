@@ -25,14 +25,15 @@ export function route(prefix: string, name: string): Route {
   return { id, url: `${prefix}${id}/`, file: indexFile(`${prefix}${id}/`) };
 }
 
-// Two names that collide would overwrite each other, so the build refuses to continue.
+// Two entries that land on one file would overwrite each other, so the build stops. Two
+// routes may share an id across prefixes: those are different addresses and different files.
 export function assertDistinct(entries: readonly { readonly name: string; readonly route: Route }[]): void {
   const seen = new Map<string, string>();
   for (const entry of entries) {
-    const previous = seen.get(entry.route.id);
+    const previous = seen.get(entry.route.file);
     if (previous !== undefined) {
-      throw new Error(`${JSON.stringify(previous)} and ${JSON.stringify(entry.name)} share the id ${entry.route.id}`);
+      throw new Error(`${JSON.stringify(previous)} and ${JSON.stringify(entry.name)} both write ${entry.route.file}`);
     }
-    seen.set(entry.route.id, entry.name);
+    seen.set(entry.route.file, entry.name);
   }
 }

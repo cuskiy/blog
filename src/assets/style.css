@@ -96,10 +96,11 @@
   --wave-width: 4rem;
   --wave-height: 1rem;
 
+  --card-min: 23rem;
   --friend-min: clamp(13rem, 18vw, 15.2rem);
   --track-min: clamp(9.75rem, 16vw, 12rem);
   --input-min: 11.2rem;
-  --max-width: 42rem;
+  --max-width: 60rem;
   --page-pad: clamp(1rem, 4.5vw, 1.6rem);
 
   /* a wave drift travels exactly one dot gap, so the pattern lands back on itself */
@@ -376,6 +377,7 @@ main {
 .post-list,
 .memo-list {
   display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(var(--card-min), 100%), 1fr));
   gap: var(--space-5);
   margin: 0;
   padding: 0;
@@ -624,9 +626,11 @@ main {
   }
 
   /* h4 to h6 keep the body size, so they are emphasis rather than a further rank, and their
-     space says the same thing */
+     space says the same thing. The size is repeated on purpose: the browser shrinks h5 and
+     h6 below the body text by default */
   & :is(h4, h5, h6) {
     margin-block: var(--space-5) var(--space-3);
+    font-size: var(--text-md);
     line-height: var(--leading-tight);
   }
 
