@@ -48,4 +48,10 @@ export const friends: readonly Friend[] = [
     avatar: "chenpan.avif",
     note: "选择一个难到几乎无人看好的项目，带着那种「我偏要证明给他们看」的冲劲去完成。",
   },
+  {
+    name: "pluie",
+    url: "https://pluie.me",
+    avatar: "pluie.png",
+    note: "普鲁伊"
+  }
 ];
