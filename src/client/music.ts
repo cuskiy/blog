@@ -13,42 +13,70 @@ let timeline: Animation | undefined;
 let watched: ResizeObserver | undefined;
 let current: HTMLButtonElement | null = null;
 let playing = false;
+// the measured size the running timeline was built from, so a resize can be told from the
+// observer's own first call
+let built: string | undefined;
 
-function stopMarquee(): void {
+interface Size {
+  box: HTMLElement;
+  line: HTMLElement;
+  width: number;
+  text: number;
+}
+
+function measure(button: HTMLButtonElement): Size | undefined {
+  const box = button.querySelector<HTMLElement>(".music-title");
+  const line = button.querySelector<HTMLElement>(".music-title-line");
+  if (box === null || line === null) {
+    return undefined;
+  }
+  return { box, line, width: box.clientWidth, text: line.scrollWidth };
+}
+
+function stopTimeline(): void {
   timeline?.cancel();
   timeline = undefined;
+  built = undefined;
+}
+
+function stopMarquee(): void {
+  stopTimeline();
   watched?.disconnect();
   watched = undefined;
 }
 
 function startMarquee(button: HTMLButtonElement): void {
-  stopMarquee();
-  const box = button.querySelector<HTMLElement>(".music-title");
-  const line = button.querySelector<HTMLElement>(".music-title-line");
-  if (box === null || line === null || reducedMotion.matches) {
+  stopTimeline();
+  const size = measure(button);
+  if (size === undefined || reducedMotion.matches) {
     return;
   }
 
-  const plan = marquee(box.clientWidth, line.scrollWidth);
+  const plan = marquee(size.width, size.text);
   if (plan === undefined) {
     return;
   }
 
-  timeline = line.animate(plan.frames, {
+  built = `${String(size.width)}x${String(size.text)}`;
+  timeline = size.line.animate(plan.frames, {
     duration: plan.duration,
     iterations: Infinity,
     easing: "linear",
   });
-  if (!playing) {
-    timeline.pause();
-  }
 
-  watched = new ResizeObserver(() => {
-    if (current !== null) {
+  if (watched === undefined) {
+    watched = new ResizeObserver(() => {
+      if (current === null || !playing) {
+        return;
+      }
+      const next = measure(current);
+      if (next === undefined || `${String(next.width)}x${String(next.text)}` === built) {
+        return;
+      }
       startMarquee(current);
-    }
-  });
-  watched.observe(box);
+    });
+    watched.observe(size.box);
+  }
 }
 
 // the player reports what is actually running, so the page only has to draw it
@@ -67,20 +95,25 @@ function render({ file, playing: isPlaying }: PlaybackState): void {
 
   if (next !== current) {
     current = next;
-    if (next === null) {
-      stopMarquee();
-    } else {
+    stopMarquee();
+    // An animation paused before its first frame stays pending for good, so it is only
+    // created once there is something to play.
+    if (next !== null && isPlaying) {
       startMarquee(next);
     }
     return;
   }
-  if (timeline === undefined) {
+  if (current === null) {
     return;
   }
-  if (isPlaying) {
-    timeline.play();
+  if (!isPlaying) {
+    timeline?.pause();
+    return;
+  }
+  if (timeline === undefined) {
+    startMarquee(current);
   } else {
-    timeline.pause();
+    timeline.play();
   }
 }
 

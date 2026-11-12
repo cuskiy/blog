@@ -851,16 +851,18 @@ main {
     }
   }
 
-  /* the box stays put and cuts one line; the line inside is what moves when the row plays */
+  /* the box stays put and cuts one line; the line inside is as wide as its text and is what
+     moves when the row plays. The line does not change size between resting and playing, so a
+     pause never re-measures the row. */
   & .music-title {
     min-inline-size: 0;
     overflow: hidden;
     white-space: nowrap;
+    text-overflow: ellipsis;
 
     & .music-title-line {
       display: block;
-      overflow: hidden;
-      text-overflow: ellipsis;
+      inline-size: max-content;
     }
   }
 }
@@ -919,17 +921,12 @@ main {
   }
 }
 
-/* The line becomes as wide as its text and slides; the box it sits in does the cutting. The
-   motion itself is built in the client from the measured width, because the segments differ in
-   length and a stylesheet can only give each one a share of a single duration. */
+/* The box cuts one line and the line inside slides. The motion itself is built in the client
+   from the measured width, because the segments differ in length and a stylesheet can only give
+   each one a share of a single duration. */
 .music-room[data-playing] .music-list button[aria-current] .music-title {
   /* the title fades out at its own edge instead of running into the wave beside it */
   mask-image: linear-gradient(90deg, black calc(100% - var(--space-4)), transparent);
-
-  & .music-title-line {
-    inline-size: max-content;
-    overflow: visible;
-  }
 }
 
 /* the playing row is marked by a note in front of its title */
