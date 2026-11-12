@@ -919,35 +919,9 @@ main {
   }
 }
 
-/* A playing row keeps its title moving: it reads from the start, runs past the last letter,
-   leaves on the left and comes back in from the right, for as long as it plays. The jump from
-   one side to the other happens while the text is out of sight, so the loop has no seam.
-   How far it has to travel comes from the row itself, measured when it starts. */
-@keyframes marquee {
-  0%,
-  10% {
-    transform: translateX(0);
-  }
-
-  45%,
-  55% {
-    transform: translateX(var(--marquee-shift, 0));
-  }
-
-  85% {
-    transform: translateX(var(--marquee-exit, 0));
-  }
-
-  86% {
-    transform: translateX(var(--marquee-enter, 0));
-  }
-
-  100% {
-    transform: translateX(0);
-  }
-}
-
-/* the line becomes as wide as its text and slides; the box it sits in does the cutting */
+/* The line becomes as wide as its text and slides; the box it sits in does the cutting. The
+   motion itself is built in the client from the measured width, because the segments differ in
+   length and a stylesheet can only give each one a share of a single duration. */
 .music-room[data-playing] .music-list button[aria-current] .music-title {
   /* the title fades out at its own edge instead of running into the wave beside it */
   mask-image: linear-gradient(90deg, black calc(100% - var(--space-4)), transparent);
@@ -955,7 +929,6 @@ main {
   & .music-title-line {
     inline-size: max-content;
     overflow: visible;
-    animation: marquee var(--marquee-duration, 8s) linear infinite;
   }
 }
 
@@ -980,8 +953,7 @@ main {
 
 /* the same selectors as above, so each stop lands on the same layer as its animation */
 @media (prefers-reduced-motion: reduce) {
-  .music-wave .wave-drift,
-  .music-room[data-playing] .music-list button[aria-current] .music-title .music-title-line {
+  .music-wave .wave-drift {
     animation: none;
   }
 }

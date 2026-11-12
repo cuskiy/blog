@@ -1,38 +1,94 @@
 import type { PlaybackState, Player } from "./audio.ts";
 import { element } from "./dom.ts";
+import { marquee } from "./marquee.ts";
 
 const room = element<HTMLElement>(".music-room");
 const tracks = [...document.querySelectorAll<HTMLButtonElement>("[data-track]")];
 
 let player: Promise<Player> | undefined;
 
-// A title only overflows once it is laid out, so the distances it has to travel are measured
-// here rather than decided at build time: to the end of the text, out of the box, and back in.
-function measure(button: HTMLButtonElement): void {
+const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
+
+let timeline: Animation | undefined;
+let watched: ResizeObserver | undefined;
+let current: HTMLButtonElement | null = null;
+let playing = false;
+
+function stopMarquee(): void {
+  timeline?.cancel();
+  timeline = undefined;
+  watched?.disconnect();
+  watched = undefined;
+}
+
+function startMarquee(button: HTMLButtonElement): void {
+  stopMarquee();
   const box = button.querySelector<HTMLElement>(".music-title");
-  if (box === null) {
+  const line = button.querySelector<HTMLElement>(".music-title-line");
+  if (box === null || line === null || reducedMotion.matches) {
     return;
   }
-  const text = box.scrollWidth;
-  const width = box.clientWidth;
-  box.style.setProperty("--marquee-shift", `${String(width - text)}px`);
-  box.style.setProperty("--marquee-exit", `${String(-text)}px`);
-  box.style.setProperty("--marquee-enter", `${String(width)}px`);
-  box.style.setProperty("--marquee-duration", `${String(Math.max(6, Math.round((text + width) / 60)))}s`);
+
+  const plan = marquee(box.clientWidth, line.scrollWidth);
+  if (plan === undefined) {
+    return;
+  }
+
+  timeline = line.animate(plan.frames, {
+    duration: plan.duration,
+    iterations: Infinity,
+    easing: "linear",
+  });
+  if (!playing) {
+    timeline.pause();
+  }
+
+  watched = new ResizeObserver(() => {
+    if (current !== null) {
+      startMarquee(current);
+    }
+  });
+  watched.observe(box);
 }
 
 // the player reports what is actually running, so the page only has to draw it
-function render({ file, playing }: PlaybackState): void {
+function render({ file, playing: isPlaying }: PlaybackState): void {
+  playing = isPlaying;
+  let next: HTMLButtonElement | null = null;
   for (const button of tracks) {
     if (button.dataset.track === file) {
       button.setAttribute("aria-current", "true");
-      measure(button);
+      next = button;
     } else {
       button.removeAttribute("aria-current");
     }
   }
-  room.toggleAttribute("data-playing", playing);
+  room.toggleAttribute("data-playing", isPlaying);
+
+  if (next !== current) {
+    current = next;
+    if (next === null) {
+      stopMarquee();
+    } else {
+      startMarquee(next);
+    }
+    return;
+  }
+  if (timeline === undefined) {
+    return;
+  }
+  if (isPlaying) {
+    timeline.play();
+  } else {
+    timeline.pause();
+  }
 }
+
+reducedMotion.addEventListener("change", () => {
+  if (current !== null) {
+    startMarquee(current);
+  }
+});
 
 // The player drags the whole synth behind it — 430 kB — so it is fetched on the first
 // click instead of holding up a page that is otherwise ready as soon as it renders.
