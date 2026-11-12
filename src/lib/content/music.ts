@@ -45,4 +45,5 @@ export const TRACKS: readonly Track[] = [
   { file: "three.mid", title: "三葉のテーマ" },
   { file: "down.mid", title: "亡灵序曲" },
   { file: "luvsic.mid", title: "Luvsic" },
+  { file: "rainyheart.mid", title: "阿卡姆巫师 - Rainy Heart" }
 ];
