@@ -6,11 +6,27 @@ const tracks = [...document.querySelectorAll<HTMLButtonElement>("[data-track]")]
 
 let player: Promise<Player> | undefined;
 
+// A title only overflows once it is laid out, so the distances it has to travel are measured
+// here rather than decided at build time: to the end of the text, out of the box, and back in.
+function measure(button: HTMLButtonElement): void {
+  const box = button.querySelector<HTMLElement>(".music-title");
+  if (box === null) {
+    return;
+  }
+  const text = box.scrollWidth;
+  const width = box.clientWidth;
+  box.style.setProperty("--marquee-shift", `${String(width - text)}px`);
+  box.style.setProperty("--marquee-exit", `${String(-text)}px`);
+  box.style.setProperty("--marquee-enter", `${String(width)}px`);
+  box.style.setProperty("--marquee-duration", `${String(Math.max(6, Math.round((text + width) / 60)))}s`);
+}
+
 // the player reports what is actually running, so the page only has to draw it
 function render({ file, playing }: PlaybackState): void {
   for (const button of tracks) {
     if (button.dataset.track === file) {
       button.setAttribute("aria-current", "true");
+      measure(button);
     } else {
       button.removeAttribute("aria-current");
     }

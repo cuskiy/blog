@@ -8,7 +8,7 @@ export function musicPage(tracks: readonly Track[], assets: Assets): string {
   const rows = tracks.map(
     (track, index) => html`      <li>
         <button type="button" data-track="${track.file}" data-index="${index}">
-          <span class="music-title">${track.title}</span>
+          <span class="music-title"><span class="music-title-line">${track.title}</span></span>
           <span class="music-wave" aria-hidden="true">
             <span class="wave-drift wave-drift-far"></span>
             <span class="wave-drift wave-drift-near"></span>
