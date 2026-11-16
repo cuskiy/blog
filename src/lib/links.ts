@@ -59,5 +59,5 @@ export const friends: readonly Friend[] = [
     url: "https://kokosa.de",
     avatar: "kokosa.avif",
     note: "乱七八糟的个人站",
-  }
+  },
 ];
