@@ -54,4 +54,10 @@ export const friends: readonly Friend[] = [
     avatar: "pluie.png",
     note: "普鲁伊",
   },
+  {
+    name: "Kokosa",
+    url: "https://kokosa.de",
+    avatar: "kokosa.avif",
+    note: "乱七八糟的个人站",
+  }
 ];
