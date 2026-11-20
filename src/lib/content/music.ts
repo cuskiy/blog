@@ -3,8 +3,8 @@ import type { Track } from "./model.ts";
 // The playlist: one line per track, in page order. Each title is written the way the song is
 // known where it comes from, followed by its artist, so nothing is translated on the way in.
 export const TRACKS: readonly Track[] = [
-  { file: "glassmoon.mid", title: "glassmoon - 雨上がりの空" },
-  { file: "shuiyueling.mid", title: "水月陵 - 散花" },
+  { file: "glassmoon.mid", title: "雨上がりの空 - glassmoon " },
+  { file: "shuiyueling.mid", title: "散花 - 水月陵 " },
   { file: "fakelove.mid", title: "Fake love - BTS" },
   { file: "last-summer.mid", title: "去年夏天 - 王大毛" },
   { file: "the-day-you-went-away.mid", title: "The Day You Went Away - M2M" },
