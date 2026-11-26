@@ -60,4 +60,10 @@ export const friends: readonly Friend[] = [
     avatar: "kokosa.avif",
     note: "乱七八糟的个人站",
   },
+  {
+    name: "ShadowRZ's Bitfield",
+    url: "https://shadowrz.github.io/",
+    avatar: "shadowrz.webp",
+    note: "The NoexistenceN of something?",
+  },
 ];
