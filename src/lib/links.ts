@@ -64,6 +64,6 @@ export const friends: readonly Friend[] = [
     name: "ShadowRZ's Bitfield",
     url: "https://shadowrz.github.io/",
     avatar: "shadowrz.webp",
-    note: "The NoexistenceN of something?",
+    note: "The NOexistenceN of something?",
   },
 ];
