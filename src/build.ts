@@ -182,8 +182,8 @@ async function bundle(): Promise<Assets> {
   await cp(join(root, "static", "robots.txt"), join(staging, "robots.txt"));
 
   // the site's own avatar is a blogroll address, so it is published as it stands
-  const siteAvatar = "/assets/cuskiy.svg";
-  await cp(join(root, "static", "cuskiy.svg"), join(staging, siteAvatar.slice(1)));
+  const siteAvatar = "/assets/cuskiy.avif";
+  await cp(join(root, "static", "cuskiy.avif"), join(staging, siteAvatar.slice(1)));
 
   return { css, scripts, favicon, icons, art, siteAvatar, avatars };
 }

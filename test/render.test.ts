@@ -26,7 +26,7 @@ const assets: Assets = {
   favicon: "/assets/favicon.ico",
   icons: [{ src: "/assets/icon-192.png", sizes: "192x192", type: "image/png" }],
   art: "/assets/lineart.webp",
-  siteAvatar: "/assets/cuskiy.svg",
+  siteAvatar: "/assets/cuskiy.avif",
   avatars: { "sakura.webp": "/assets/a0b1e4f593.webp" },
 };
 
